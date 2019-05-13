@@ -313,7 +313,7 @@ def section3_init():
     bg_pos.append([bg_pos[1][0] + bg[1].get_width(), 0])
     startscrolling_x = WIDTH/2
     startscrolling_y = HEIGHT/2
-    startbackground_x = 0
+    startbackground_x = 0 #
     startbackground_y = 0
 
 

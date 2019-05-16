@@ -169,7 +169,7 @@ class enemy(sprite):
         self.yspd = 10
         self.rad_vision = 20 # the range of vision for enemy
         self.attack = False
-        self.move_range = (self.x - 100, self.x + 100)
+        self.move_range = (self.x - 200, self.x + 200)
 
 
     def enemy_move(self, grounds): # try to detect player
@@ -181,9 +181,13 @@ class enemy(sprite):
         if (self.x > self.move_range[1] - self.width):
             self.dir = -self.dir
 
+        cnt = 0
         for i in range(len(grounds)):
-            if (self.checkcollision(self, grounds[i]) and grounds[i].y < self.y + self.height): # when the enemy bump into high ground
-                self.dir = -self.dir
+            if self.checkcollision(self, grounds[i]) == False:
+                cnt+=1
+
+        if (cnt == len(grounds)):
+            self.dir = -self.dir
 
         self.pos = (self.x , self.y)
 
@@ -204,9 +208,35 @@ class enemy(sprite):
         return
 
 
-    def spawn(self):
-        # spawn after sometimes
+class shooting_enemy(sprite):
+    def __init__(self, width, height, x=0, y=0):
+        sprite.__init__(self, x, y)
+        self.width = width
+        self.height = height
+        self.dim = (self.width, self.height)
+        self.typ = random.randrange(3)
+        self.surface = pygame.Surface(self.dim, pygame.SRCALPHA, 32)
+        self.surface.fill(self.color)
+        self.xspd = 5
+        self.rad_vision = 100
+        self.bullets = []
+
+
+    def enemy_follow(self, player):
+        if (abs(self.x - player.x) <= self.rad_vision and abs(self.y - player.y) <= self.rad_vision): # can change default range
+            self.attack = True
+        else:
+            self.attack = False
+
+        if (self.attack == True):
+            if (self.x < player.x):
+                # load turn back animation
+                return
+
+    def enemy_attack(self, player):
+        # do some attack movements
         return
+
 
 class npc(sprite):
     def __init__(self, width, height, x=0, y=0):
@@ -222,12 +252,13 @@ class npc(sprite):
         self.rad_vision = 20 # the range of vision for enemy
 
 class moving_npc(npc):
-    def __init__(self, width, height, x=0, y=0):
+    def __init__(self, width, height, x=0, y=0, spd=1):
         npc.__init__(self, width, height, x, y)
-        self.move_range = (self.x - 100, self.x + 100)
+        self.xspd = spd
+        self.move_range = (self.x - 200, self.x + 200)
 
     def npc_move(self, grounds): # try to detect player
-        self.x += self.xspd/3 * self.dir
+        self.x += self.xspd * self.dir
 
         if (self.x < self.move_range[0]):
             self.dir = -self.dir
@@ -235,8 +266,7 @@ class moving_npc(npc):
         if (self.x > self.move_range[1] - self.width):
             self.dir = -self.dir
 
-        for i in range(len(grounds)):
-            if (self.checkcollision(self, grounds[i]) and grounds[i].y < self.y + self.height): # when the enemy bump into high ground
-                self.dir = -self.dir
-
         self.pos = (self.x , self.y)
+
+    def set_rangex(self, l, r):
+        self.move_range = (l, r)

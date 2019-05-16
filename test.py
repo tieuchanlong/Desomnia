@@ -389,14 +389,16 @@ def level1(playercolor):
         if getSpriteCollision(ball, lowerbrickwall[i]) == 1:
             lowerbrickwall[i].setpos(0, -100)
 
-    screen.blit(brickbreakertext.getText(), brickbreakertext.getPos())
-    screen.blit(player.getPlayer(), player.getPos())
-    screen.blit(ball.getBall(), ball.getPos())
 
     movingbrickwall[0].brickmoveleft(WIDTH, 5)
     movingbrickwall[1].brickmoveright(WIDTH, 5)
     movingbrickwall[2].brickmoveleft(WIDTH, 5)
     movingbrickwall[3].brickmoveright(WIDTH, 5)
+
+    screen.blit(brickbreakertext.getText(), brickbreakertext.getPos())
+    screen.blit(player.getPlayer(), player.getPos())
+    screen.blit(ball.getBall(), ball.getPos())
+
     for i in range(len(movingbrickwall)):
         screen.blit(movingbrickwall[i].getbrickwall(), movingbrickwall[i].getPos())
     for i in range(len(upperbrickwall)):

@@ -10,8 +10,7 @@ class sprite:
         self.x = x
         self.y = y
         self.dir = random.randrange(2)
-        if (self.dir == 0):
-            self.dir = -1
+        self.dir = 1
         self.dir1 = 1
         self.pos = (self.x, self.y)
         self.surface = pygame.Surface((0, 0), pygame.SRCALPHA, 32)

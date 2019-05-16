@@ -30,6 +30,7 @@ class section:
 
         for i in range(len(self.moving_npc)):
             self.moving_npc[i].setPos(self.moving_npc[i].x + distance, self.moving_npc[i].y)
+            self.moving_npc[i].set_rangex(self.moving_npc[i].move_range[0] + distance, self.moving_npc[i].move_range[1] + distance)
 
         for i in range(len(self.waters)):
             self.waters[i].setPos(self.waters[i].x + distance, self.waters[i].y)

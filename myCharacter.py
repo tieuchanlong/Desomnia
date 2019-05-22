@@ -19,6 +19,7 @@ class player(sprite):
         self.swim = False
         self.climb = False
         self.hp = 5
+        self.hp_bars = []
         self.bounce = False
 
     def playerMove(self, pressedKey, spd):
@@ -145,6 +146,11 @@ class player(sprite):
                 if (pressedKey[pygame.K_e]):
                     items[i].interact()
 
+    def dec_hp(self):
+        if (self.hp > 0):
+            self.hp_bars[self.hp - 1].setColor((0, 0, 0))
+            self.hp -=1
+
 
 class bullet(sprite):
     def __init__(self, width, height, x=0, y=0, dir=1):
@@ -197,10 +203,16 @@ class enemy(sprite):
         self.x += self.xspd/2 * self.dir
 
         if (self.x < self.move_range[0]):
-            self.dir = 1
+            if (self.attack == False):
+                self.dir = 1
+            else:
+                self.dir = 0
 
-        if (self.x > self.move_range[1] - self.width):
-            self.dir = -1
+        if (self.x > self.move_range[1] and self.attack == False):
+            if (self.attack == False):
+                self.dir = -1
+            else:
+                self.dir = 0
 
         cnt = 0
         for i in range(len(grounds)):
@@ -219,22 +231,21 @@ class enemy(sprite):
             self.attack = False
 
         if (self.attack == True):
-            if (self.x < self.move_range[0]):
-                self.dir = 1
-                self.attack = False
-            elif (self.x > self.move_range[1]):
-                self.dir = -1
-                self.attack = False
-            else:
-                self.enemy_attack(player)
-                if (self.x < player.x):
-                    # load turn back animation
+            self.enemy_attack(player)
+            if (self.x < player.x):
+                # load turn back animation
+                if (self.x >= self.move_range[0]):
                     self.dir = 1
                 else:
+                    self.dir = 0
+            else:
+                if (self.x <= self.move_range[1]):
                     self.dir = -1
+                else:
+                    self.dir = 0
 
 
-            self.x += self.xspd*self.dir
+            self.x += self.xspd/2 *self.dir
             #self.move_range = (self.move_range[0] + self.xspd*self.dir, self.move_range[1] + self.xspd*self.dir)
             self.pos = (self.x, self.y)
 
@@ -244,8 +255,11 @@ class enemy(sprite):
         # do some attack movements
 
         if (self.checkcollision(self, player)):
-            player.hp -= 1
             player.jump = -15
+
+            if (player.jump == -15 and player.bounce == False):
+                player.dec_hp()
+
             player.bounce = True
 
             if (player.x > self.x):

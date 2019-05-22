@@ -10,6 +10,7 @@ from myCharacter import *
 from myBackground import *
 from mySection import *
 from myObject import *
+from myStat_copy import *
 pygame.init() # load the pygame module commands in the program
 
 # Display variables
@@ -33,7 +34,7 @@ clock = pygame.time.Clock()  # starts a clock object to measure time
 
 global section_area
 global scenechange
-section_area = 4
+section_area = 2
 scenechange = -1
 
 def section_gameplay(section):
@@ -152,6 +153,9 @@ def section_gameplay(section):
 
     for i in range(len(section.stairs)):
         screen.blit(section.stairs[i].getSurface(), section.stairs[i].getPos())
+
+    for i in range(len(Anna.hp_bars)):
+        screen.blit(Anna.hp_bars[i].getSurface(), Anna.hp_bars[i].getPos())
 
     screen.blit(Anna.getSurface(), Anna.getPos())
 
@@ -287,6 +291,11 @@ def section2_init():
     global Anna
     Anna = player(35, 35, section2.stable_grounds[0].x, section2.stable_grounds[0].y - 35)
     Anna.setColor((0, 0, 255))
+    Anna.hp_bars.append(hp_bar(20, 20, 100, 50))
+    Anna.hp_bars.append(hp_bar(20, 20, 150, 50))
+    Anna.hp_bars.append(hp_bar(20, 20, 200, 50))
+    Anna.hp_bars.append(hp_bar(20, 20, 250, 50))
+    Anna.hp_bars.append(hp_bar(20, 20, 300, 50))
 
     # NPC
     section2.moving_npc.append(moving_npc(30, 30, section2.stable_grounds[0].x, section2.stable_grounds[0].y - 30))
@@ -362,6 +371,8 @@ def section2_init():
 def section2_gameplay():
     global scenechange
     global section_area
+
+    print(Anna.hp)
 
     if (scenechange != 1):
         section_gameplay(section2)

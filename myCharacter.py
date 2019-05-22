@@ -18,19 +18,27 @@ class player(sprite):
         self.fall = False
         self.swim = False
         self.climb = False
+        self.hp = 5
+        self.bounce = False
 
     def playerMove(self, pressedKey, spd):
-        if (pressedKey[pygame.K_a]):
-            self.x -= spd
-        if (pressedKey[pygame.K_d]):
-            self.x += spd
+        if (self.bounce == False):
+            if (pressedKey[pygame.K_a]):
+                self.x -= spd
+            if (pressedKey[pygame.K_d]):
+                self.x += spd
 
-        if (self.x < 0):
-            self.x = max(self.x, 0)
+            if (self.x < 0):
+                self.x = max(self.x, 0)
+        else:
+            self.x += 20*self.dir
+
+        if (self.jump + self.yspd >= 0):
+            self.bounce = False
 
         self.pos = (self.x, self.y)
 
-    def player_fall(self, spd, grounds):
+    def player_fall(self, spd, grounds, moving_grounds):
         self.fall = True
         for i in range(len(grounds)):
             if self.checkcollision(self, grounds[i]) and self.y + self.height >= grounds[i].y and self.y < grounds[i].y:
@@ -39,13 +47,20 @@ class player(sprite):
                 self.pos = (self.x, self.y)
                 break
 
+        for i in range(len(moving_grounds)):
+            if self.checkcollision(self, moving_grounds[i]) and self.y + self.height >= moving_grounds[i].y and self.y < moving_grounds[i].y:
+                self.fall = False
+                self.y = moving_grounds[i].y - self.height
+                self.pos = (self.x, self.y)
+                break
+
         if (self.fall == True and self.swim == False):
             self.y += spd + self.jump
             #self.jump += 0.5
             self.pos = (self.x, self.y)
 
-    def player_jump(self, pressedKey, grounds):
-        if (self.jump == 0 and self.fall == False and self.swim == False and pressedKey[pygame.K_SPACE]):
+    def player_jump(self, pressedKey, grounds, moving_grounds):
+        if (self.jump == 0 and self.fall == False and self.swim == False and self.bounce == False and pressedKey[pygame.K_SPACE]):
             self.jump = -24
             return True
 
@@ -58,15 +73,6 @@ class player(sprite):
         self.pos = (self.x, self.y)
         self.jump += 0.5
 
-        for i in range(len(grounds)):
-            if self.checkcollision(self, grounds[i]) and self.jump >= -10:
-                #print('Yes')
-                self.y = grounds[i].y - self.height
-                self.jump = 0
-                self.fall = True
-                self.pos = (self.x, self.y)
-                return False
-
         return True
 
     def player_swim(self, pressedKey, waters):
@@ -74,6 +80,7 @@ class player(sprite):
         for i in range(len(waters)):
             if (self.checkcollision(self, waters[i]) and self.y >= waters[i].y):
                 self.swim = True
+                self.fall = False
                 break
 
         if (self.swim == True):
@@ -90,9 +97,13 @@ class player(sprite):
                 self.x = min(self.x, waters[i].x + waters[i].width - self.width)
                 self.x = max(self.x, 0)
 
-            if self.y > waters[i].y + waters[i].height - self.height or self.y < 0:
-                self.y = min(self.y, waters[i].y + waters[i].height - self.height)
+            if self.y > waters[i].y + waters[i].height - self.height - 20 or self.y < 0:
+                self.y = min(self.y, waters[i].y + waters[i].height - self.height - 20)
                 self.y = max(self.y, 0)
+
+            if (pressedKey[pygame.K_SPACE]):
+                self.jump = -30
+                self.swim = False
 
             self.pos = (self.x, self.y)
 
@@ -126,7 +137,7 @@ class player(sprite):
                 self.y = min(self.y, stairs[i].y + stairs[i].height - self.height)
                 self.y = max(self.y, stairs[i].y)'''
 
-            self.pos = (self.x, self.y)
+        self.pos = (self.x, self.y)
 
     def player_pickup(self, pressedKey, items):
         for i in range(len(items)):
@@ -135,24 +146,33 @@ class player(sprite):
                     items[i].interact()
 
 
-class companion(sprite):
-    def __init__(self, width, height, x=0, y=0):
+class bullet(sprite):
+    def __init__(self, width, height, x=0, y=0, dir=1):
         sprite.__init__(self, x, y)
         self.width = width
         self.height = height
+        self.dir = dir
         self.dim = (self.width, self.height)
         self.surface = pygame.Surface(self.dim, pygame.SRCALPHA, 32)
+        self.red = 0
+        self.green = 0
+        self.blue = 0
+        self.color = (0, 0, 0)
         self.surface.fill(self.color)
         self.xspd = 10
         self.yspd = 10
 
-    def companion_move(self, spd=5): # follow player
-        pos = pygame.mouse.get_pos(0)
-        self.x = pos[0] - self.width/2
+    def bullet_move(self, player): # follow player
+        self.x = self.x + self.xspd*self.dir
 
         if (self.x > WIDTH - self.width or self.x < 0):
             self.x = min(self.x, WIDTH - self.width)
             self.x = max(self.x, 0)
+
+        if (self.checkcollision(self, player)):
+            #player take damage animation
+            self.dir = 0
+            self.setPos(-3000, -3000)
 
         self.pos = (self.x, self.y)
 
@@ -167,19 +187,20 @@ class enemy(sprite):
         self.surface.fill(self.color)
         self.xspd = 5
         self.yspd = 10
-        self.rad_vision = 20 # the range of vision for enemy
+        self.rad_vision = 100 # the range of vision for enemy
         self.attack = False
         self.move_range = (self.x - 200, self.x + 200)
+        self.bounce = False
 
 
     def enemy_move(self, grounds): # try to detect player
         self.x += self.xspd/2 * self.dir
 
         if (self.x < self.move_range[0]):
-            self.dir = -self.dir
+            self.dir = 1
 
         if (self.x > self.move_range[1] - self.width):
-            self.dir = -self.dir
+            self.dir = -1
 
         cnt = 0
         for i in range(len(grounds)):
@@ -192,20 +213,45 @@ class enemy(sprite):
         self.pos = (self.x , self.y)
 
     def enemy_follow(self, player):
-        if (abs(self.x - player.x) <= self.rad_vision and abs(self.y - player.y) <= self.rad_vision): # can change default range
+        if (abs(self.x - player.x) <= self.rad_vision and abs(self.y - player.y) <= self.rad_vision and self.move_range[0] <= self.x <= self.move_range[1]): # can change default range
             self.attack = True
         else:
             self.attack = False
 
         if (self.attack == True):
-            if (self.x < player.x):
-                # load turn back animation
-                self.x += self.xspd
-                self.pos = (self.x, self.y)
+            if (self.x < self.move_range[0]):
+                self.dir = 1
+                self.attack = False
+            elif (self.x > self.move_range[1]):
+                self.dir = -1
+                self.attack = False
+            else:
+                self.enemy_attack(player)
+                if (self.x < player.x):
+                    # load turn back animation
+                    self.dir = 1
+                else:
+                    self.dir = -1
+
+
+            self.x += self.xspd*self.dir
+            #self.move_range = (self.move_range[0] + self.xspd*self.dir, self.move_range[1] + self.xspd*self.dir)
+            self.pos = (self.x, self.y)
+
+            self.enemy_attack(player)
 
     def enemy_attack(self, player):
         # do some attack movements
-        return
+
+        if (self.checkcollision(self, player)):
+            player.hp -= 1
+            player.jump = -15
+            player.bounce = True
+
+            if (player.x > self.x):
+                player.dir = 1
+            else:
+                player.dir = -1
 
 
 class shooting_enemy(sprite):
@@ -218,9 +264,126 @@ class shooting_enemy(sprite):
         self.surface = pygame.Surface(self.dim, pygame.SRCALPHA, 32)
         self.surface.fill(self.color)
         self.xspd = 5
-        self.rad_vision = 100
+        self.rad_vision = 400
         self.bullets = []
+        self.start_shoot = 0
+        self.end_shoot = 0
+        self.attack = False
 
+
+    def enemy_follow(self, player):
+        self.end_shoot = pygame.time.get_ticks()
+        if (abs(self.x - player.x) <= self.rad_vision and abs(self.y - player.y) <= self.rad_vision and self.attack == False): # can change default range
+            self.attack = True
+            self.start_shoot = pygame.time.get_ticks()
+        elif (abs(self.x - player.x) > self.rad_vision or abs(self.y - player.y) > self.rad_vision):
+            self.attack = False
+
+        if (self.attack == True):
+            if (self.x > player.x):
+                self.dir = -1
+                # load turn back animation
+            else:
+                self.dir = 1
+                # load turn back animation
+
+            if (self.end_shoot - self.start_shoot >= 2000):
+                # load shoot animation
+                self.start_shoot = pygame.time.get_ticks()
+                self.bullets.append(bullet(10, 10, self.x + self.width/2, self.y, self.dir))
+
+
+    def enemy_attack(self, player): # make the bullet shoot
+        for i in range(len(self.bullets)):
+            print('Yes')
+            self.bullets[i].bullet_move(player)
+
+
+class jumping_enemy(enemy):
+    def __init__(self, width, height, x=0, y=0):
+        enemy.__init__(self, width, height, x, y)
+        self.xspd = 20
+        self.yspd = 0
+
+    def enemy_follow(self, player):
+        if (abs(self.x - player.x) <= self.rad_vision and abs(self.y - player.y) <= self.rad_vision and self.move_range[0] <= self.x <= self.move_range[1]): # can change default range
+            self.attack = True
+        else:
+            self.attack = False
+
+        if (self.attack == True):
+            if (self.x < self.move_range[0]):
+                self.dir = 1
+                self.attack = False
+            elif (self.x > self.move_range[1]):
+                self.dir = -1
+                self.attack = False
+            else:
+                self.enemy_attack(player)
+                if (self.x < player.x):
+                    # load turn back animation
+                    self.dir = 1
+                else:
+                    self.dir = -1
+
+
+    def enemy_attack(self, player):
+        if (0 <= player.yspd <= 60):
+            self.y = self.y + 1
+            self.yspd += 1
+        else:
+            if (self.yspd >= 70):
+                self.yspd = 0
+
+            self.y = self.y - 1
+            self.yspd -= 1
+            if (self.y <= -80):
+                self.x = player.x - 10
+
+        self.pos = (player.x, player.y)
+        # do some attack animations
+
+        if (self.checkcollision(self, player)):
+            player.hp -= 1
+            player.jump = -15
+            player.bounce = True
+
+            if (player.x > self.x):
+                player.dir = 1
+            else:
+                player.dir = -1
+
+class boss(enemy):
+    def __init__(self, width, height, x=0, y=0):
+        enemy.__init__(self, width, height, x, y)
+        self.jump = 0
+        self.rad_vision = WIDTH
+        self.hit = 0
+
+
+'''class swimming_enemy(enemy):
+    def __init__(self, width, height, x=0, y=0):
+        enemy.__init__(self, width, height, x, y)
+        self.jump = 0
+        self.move_range = (self.x - 10000, self.x + 10000)
+        self.dir = random.randrange(-1, 2)
+
+    def enemy_move(self, grounds, water): # try to detect player
+        self.x += self.xspd/2 * self.dir
+
+        if (self.x < self.move_range[0]):
+            self.dir = -self.dir
+
+        if (self.x > self.move_range[1] - self.width):
+            self.dir = -self.dir
+
+        for i in range(len(grounds)):
+            if self.checkcollision(self, grounds[i]) == True:
+                self.dir = -self.dir
+                break
+
+
+        self.pos = (self.x , self.y)
 
     def enemy_follow(self, player):
         if (abs(self.x - player.x) <= self.rad_vision and abs(self.y - player.y) <= self.rad_vision): # can change default range
@@ -229,13 +392,29 @@ class shooting_enemy(sprite):
             self.attack = False
 
         if (self.attack == True):
+            self.enemy_attack(player)
             if (self.x < player.x):
                 # load turn back animation
-                return
+                self.dir = 1
+            elif (self.x > player.x):
+                self.dir = -1
+
+            if (self.y < player.y):
+                # load turn back animation
+                self.dir1 = 1
+            elif (self.y > player.y):
+                self.dir1 = -1
+
+            self.x += self.xspd * self.dir
+            self.y += self.yspd * self.dir1
+            self.pos = (self.x, self.y)
+
 
     def enemy_attack(self, player):
-        # do some attack movements
-        return
+        if (self.checkcollision(self, player)):
+            # player hp -1
+            return
+        # do some attack animations'''
 
 
 class npc(sprite):

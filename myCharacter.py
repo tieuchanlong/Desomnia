@@ -15,9 +15,12 @@ class player(sprite):
         self.xspd = 10
         self.yspd = 10
         self.jump = 0
+        self.dir = 1
         self.fall = False
         self.swim = False
         self.climb = False
+        self.attack = False
+        self.skill_active = False
         self.hp = 5
         self.hp_bars = []
         self.bounce = False
@@ -26,8 +29,10 @@ class player(sprite):
         if (self.bounce == False):
             if (pressedKey[pygame.K_a]):
                 self.x -= spd
+                self.dir = -1
             if (pressedKey[pygame.K_d]):
                 self.x += spd
+                self.dir = 1
 
             if (self.x < 0):
                 self.x = max(self.x, 0)
@@ -91,8 +96,10 @@ class player(sprite):
                 self.y += self.yspd
             if (pressedKey[pygame.K_a]):
                 self.x -= self.xspd
+                self.dir = -1
             if (pressedKey[pygame.K_d]):
                 self.x += self.xspd
+                self.dir = 1
 
             if self.x > waters[i].x + waters[i].width - self.width or self.x < 0:
                 self.x = min(self.x, waters[i].x + waters[i].width - self.width)
@@ -146,10 +153,19 @@ class player(sprite):
                 if (pressedKey[pygame.K_e]):
                     items[i].interact()
 
+    def player_skill(self, pressedKey, paint):
+        if (pressedKey[pygame.K_q]):
+            if (self.skill_active == False):
+                self.attack = True
+                paint.dec_bar(10) # can change value
+
+            self.skill_active = True
+
     def dec_hp(self):
         if (self.hp > 0):
             self.hp_bars[self.hp - 1].setColor((0, 0, 0))
             self.hp -=1
+
 
 
 class bullet(sprite):
@@ -193,6 +209,7 @@ class enemy(sprite):
         self.surface.fill(self.color)
         self.xspd = 5
         self.yspd = 10
+        self.hit_dist = 0 # hit dist is the distance flew after being hit
         self.rad_vision = 100 # the range of vision for enemy
         self.attack = False
         self.move_range = (self.x - 200, self.x + 200)
@@ -200,56 +217,66 @@ class enemy(sprite):
 
 
     def enemy_move(self, grounds): # try to detect player
-        self.x += self.xspd/2 * self.dir
+        if (self.bounce == False):
+            self.x += self.xspd/2 * self.dir
 
-        if (self.x < self.move_range[0]):
-            if (self.attack == False):
-                self.dir = 1
-            else:
-                self.dir = 0
-
-        if (self.x > self.move_range[1] and self.attack == False):
-            if (self.attack == False):
-                self.dir = -1
-            else:
-                self.dir = 0
-
-        cnt = 0
-        for i in range(len(grounds)):
-            if self.checkcollision(self, grounds[i]) == False:
-                cnt+=1
-
-        if (cnt == len(grounds)):
-            self.dir = -self.dir
-
-        self.pos = (self.x , self.y)
-
-    def enemy_follow(self, player):
-        if (abs(self.x - player.x) <= self.rad_vision and abs(self.y - player.y) <= self.rad_vision and self.move_range[0] <= self.x <= self.move_range[1]): # can change default range
-            self.attack = True
-        else:
-            self.attack = False
-
-        if (self.attack == True):
-            self.enemy_attack(player)
-            if (self.x < player.x):
-                # load turn back animation
-                if (self.x >= self.move_range[0]):
+            if (self.x < self.move_range[0]):
+                if (self.attack == False):
                     self.dir = 1
                 else:
                     self.dir = 0
-            else:
-                if (self.x <= self.move_range[1]):
+
+            if (self.x > self.move_range[1] and self.attack == False):
+                if (self.attack == False):
                     self.dir = -1
                 else:
                     self.dir = 0
 
+            cnt = 0
+            for i in range(len(grounds)):
+                if self.checkcollision(self, grounds[i]) == False:
+                    cnt+=1
 
-            self.x += self.xspd/2 *self.dir
-            #self.move_range = (self.move_range[0] + self.xspd*self.dir, self.move_range[1] + self.xspd*self.dir)
-            self.pos = (self.x, self.y)
+            if (cnt == len(grounds)):
+                self.dir = -self.dir
+        else:
+            self.hit_dist += self.xspd
+            if (self.bounce < 200):
+                self.x += self.dir * self.xspd
 
-            self.enemy_attack(player)
+            elif (self.hit_dist == 600):
+                self.bounce = False
+                self.hit_dist = 0
+
+        self.pos = (self.x , self.y)
+
+    def enemy_follow(self, player):
+        if (self.bounce == False):
+            if (abs(self.x - player.x) <= self.rad_vision and abs(self.y - player.y) <= self.rad_vision and self.move_range[0] <= self.x <= self.move_range[1]): # can change default range
+                self.attack = True
+            else:
+                self.attack = False
+
+            if (self.attack == True):
+                self.enemy_attack(player)
+                if (self.x < player.x):
+                    # load turn back animation
+                    if (self.x >= self.move_range[0]):
+                        self.dir = 1
+                    else:
+                        self.dir = 0
+                else:
+                    if (self.x <= self.move_range[1]):
+                        self.dir = -1
+                    else:
+                        self.dir = 0
+
+
+                self.x += self.xspd/2 *self.dir
+                #self.move_range = (self.move_range[0] + self.xspd*self.dir, self.move_range[1] + self.xspd*self.dir)
+                self.pos = (self.x, self.y)
+
+                self.enemy_attack(player)
 
     def enemy_attack(self, player):
         # do some attack movements
@@ -309,7 +336,6 @@ class shooting_enemy(sprite):
 
     def enemy_attack(self, player): # make the bullet shoot
         for i in range(len(self.bullets)):
-            print('Yes')
             self.bullets[i].bullet_move(player)
 
 

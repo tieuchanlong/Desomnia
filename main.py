@@ -10,7 +10,7 @@ from myCharacter import *
 from myBackground import *
 from mySection import *
 from myObject import *
-from myStat_copy import *
+from myStats import *
 pygame.init() # load the pygame module commands in the program
 
 # Display variables
@@ -66,7 +66,6 @@ def section_gameplay(section):
             startbackground_y = bg_pos[len(bg) - 1][1] + bg[len(bg) - 1].get_height()
 
     if (Anna.y + Anna.height / 2 < startscrolling_y):
-        print('Yes')
         startbackground_y -= startscrolling_y - Anna.y - Anna.height / 2
         if (startbackground_y > bg_pos[0][1]):
             section.move_y(startscrolling_y - Anna.y - Anna.height / 2)
@@ -98,6 +97,10 @@ def section_gameplay(section):
 
     if (Anna.player_jump(pressedKey, section.stable_grounds, section.moving_grounds) == False):
         Anna.player_fall(Anna.yspd, section.stable_grounds, section.moving_grounds)
+
+    Anna.player_skill(pressedKey, Anna_paint)
+    Anna_brush.brush_move(Anna)
+    Anna_brush.brush_hit(section.moving_enemies)
 
     for i in range(len(section.moving_npc)):
         section.moving_npc[i].npc_move(section.stable_grounds)
@@ -158,6 +161,8 @@ def section_gameplay(section):
         screen.blit(Anna.hp_bars[i].getSurface(), Anna.hp_bars[i].getPos())
 
     screen.blit(Anna.getSurface(), Anna.getPos())
+    screen.blit(Anna_brush.getSurface(), Anna_brush.getPos())
+    screen.blit(Anna_paint.getSurface(), Anna_paint.getPos())
 
 def scene_change():
     global scenechange
@@ -297,6 +302,12 @@ def section2_init():
     Anna.hp_bars.append(hp_bar(20, 20, 250, 50))
     Anna.hp_bars.append(hp_bar(20, 20, 300, 50))
 
+    global Anna_brush
+    Anna_brush = brush(120, 10, Anna.x + Anna.width, Anna.y)
+
+    global Anna_paint
+    Anna_paint = paint_bar(60, 60, 20, 20)
+
     # NPC
     section2.moving_npc.append(moving_npc(30, 30, section2.stable_grounds[0].x, section2.stable_grounds[0].y - 30))
     section2.moving_npc[0].set_rangex(section2.stable_grounds[0].x, section2.stable_grounds[1].x - 130)
@@ -372,7 +383,6 @@ def section2_gameplay():
     global scenechange
     global section_area
 
-    print(Anna.hp)
 
     if (scenechange != 1):
         section_gameplay(section2)

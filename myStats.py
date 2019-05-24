@@ -22,17 +22,21 @@ class paint_bar(sprite):
         self.height = height
         self.dim = (self.width, self.height)
         self.surface = pygame.Surface(self.dim, pygame.SRCALPHA, 32)
-        self.red = 0
-        self.green = 0
-        self.blue = 0
+        self.red = 255
+        self.green = 255
+        self.blue = 255
         self.color = (self.red, self.green, self.blue)
         self.surface.fill(self.color)
 
+
     def dec_bar(self, amount):
-        print(self.height)
         if (self.height >= amount):
+            print('Yes')
             self.height -= amount
 
-        self.y = 80 - amount
+        self.y = 80 - self.height
         self.dim = (self.width, self.height)
+        self.surface = pygame.Surface(self.dim)
+        self.surface.fill(self.color)
+
         self.pos = (self.x, self.y)

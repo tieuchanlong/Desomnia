@@ -12,6 +12,7 @@ class section:
         self.traps = []
         self.moving_traps = []
         self.hor_ground = 0
+        self.throw_stuffs = []
 
     def move_x(self, distance):
         for i in range(len(self.stable_enemies)):
@@ -31,6 +32,9 @@ class section:
 
         for i in range(len(self.items)):
             self.items[i].setPos(self.items[i].x + distance, self.items[i].y)
+
+        for i in range(len(self.throw_stuffs)):
+            self.throw_stuffs[i].setPos(self.throw_stuffs[i].x + distance, self.throw_stuffs[i].y)
 
         for i in range(len(self.npc)):
             self.npc[i].setPos(self.npc[i].x + distance, self.npc[i].y)
@@ -69,6 +73,9 @@ class section:
 
         for i in range(len(self.items)):
             self.items[i].setPos(self.items[i].x, self.items[i].y + distance)
+
+        for i in range(len(self.throw_stuffs)):
+            self.throw_stuffs[i].setPos(self.throw_stuffs[i].x, self.throw_stuffs[i].y + distance)
 
         for i in range(len(self.npc)):
             self.npc[i].setPos(self.npc[i].x, self.npc[i].y + distance)

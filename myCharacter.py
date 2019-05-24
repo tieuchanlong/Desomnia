@@ -1,4 +1,5 @@
 from myParentclass import *
+from myObject import *
 import pygame
 
 WIDTH = 900
@@ -20,7 +21,11 @@ class player(sprite):
         self.swim = False
         self.climb = False
         self.attack = False
+        self.attack_typ = -1
+        self.start_attack = 0
+        self.end_attack = 0
         self.skill_active = False
+        self.normal_active = False
         self.hp = 5
         self.hp_bars = []
         self.bounce = False
@@ -153,8 +158,25 @@ class player(sprite):
                 if (pressedKey[pygame.K_e]):
                     items[i].interact()
 
+    def player_attack(self, pressedKey, section):
+        self.end_attack = pygame.time.get_ticks()
+        if (pressedKey[pygame.K_r]):
+            if (self.normal_active == False):
+                self.normal_active = True
+                self.start_attack = pygame.time.get_ticks()
+                self.attack_typ = (self.attack_typ + 1) % 3
+                section.throw_stuffs.append(throw_stuff(self.attack_typ, self.dir))
+                section.throw_stuffs[len(section.throw_stuffs)-1].setPos(self.x + self.width - section.throw_stuffs[len(section.throw_stuffs)-1].width, self.y + section.throw_stuffs[len(section.throw_stuffs)-1].height)
+
+        if (self.end_attack - self.start_attack >= 1000):
+            self.normal_active = False
+
+            if (self.end_attack - self.start_attack >= 2000):
+                self.attack_typ = -1
+
+
     def player_skill(self, pressedKey, paint):
-        if (pressedKey[pygame.K_q]):
+        if (pressedKey[pygame.K_q] and paint.height > 0):
             if (self.skill_active == False):
                 self.attack = True
                 paint.dec_bar(10) # can change value
@@ -209,15 +231,17 @@ class enemy(sprite):
         self.surface.fill(self.color)
         self.xspd = 5
         self.yspd = 10
+        self.hp = 5
         self.hit_dist = 0 # hit dist is the distance flew after being hit
         self.rad_vision = 100 # the range of vision for enemy
         self.attack = False
+        self.stun = False
         self.move_range = (self.x - 200, self.x + 200)
         self.bounce = False
 
 
     def enemy_move(self, grounds): # try to detect player
-        if (self.bounce == False):
+        if (self.stun == False and self.bounce == False):
             self.x += self.xspd/2 * self.dir
 
             if (self.x < self.move_range[0]):
@@ -241,42 +265,49 @@ class enemy(sprite):
                 self.dir = -self.dir
         else:
             self.hit_dist += self.xspd
-            if (self.bounce < 200):
-                self.x += self.dir * self.xspd
-
-            elif (self.hit_dist == 600):
+            if (self.hit_dist < 100):
+                self.x -= self.dir * self.xspd
+            elif (self.hit_dist >= 100):
                 self.bounce = False
-                self.hit_dist = 0
+
+                if (self.stun == False):
+                    self.hit_dist = 0
+                else:
+                    if (self.hit_dist > 600):
+                        self.stun = False
+                        self.hit_dist = 0
 
         self.pos = (self.x , self.y)
 
     def enemy_follow(self, player):
-        if (self.bounce == False):
-            if (abs(self.x - player.x) <= self.rad_vision and abs(self.y - player.y) <= self.rad_vision and self.move_range[0] <= self.x <= self.move_range[1]): # can change default range
-                self.attack = True
-            else:
-                self.attack = False
+        if (abs(self.x - player.x) <= self.rad_vision and abs(self.y - player.y) <= self.rad_vision and self.move_range[0] <= self.x <= self.move_range[1]): # can change default range
+            self.attack = True
+        else:
+            self.attack = False
 
-            if (self.attack == True):
-                self.enemy_attack(player)
-                if (self.x < player.x):
-                    # load turn back animation
-                    if (self.x >= self.move_range[0]):
-                        self.dir = 1
-                    else:
-                        self.dir = 0
+        if (self.bounce == True):
+            self.attack = False
+
+        if (self.attack == True):
+            self.enemy_attack(player)
+            if (self.x < player.x):
+                # load turn back animation
+                if (self.x >= self.move_range[0]):
+                    self.dir = 1
                 else:
-                    if (self.x <= self.move_range[1]):
-                        self.dir = -1
-                    else:
-                        self.dir = 0
+                    self.dir = 0
+            else:
+                if (self.x <= self.move_range[1]):
+                    self.dir = -1
+                else:
+                    self.dir = 0
 
 
-                self.x += self.xspd/2 *self.dir
-                #self.move_range = (self.move_range[0] + self.xspd*self.dir, self.move_range[1] + self.xspd*self.dir)
-                self.pos = (self.x, self.y)
+            self.x += self.xspd/2 *self.dir
+            #self.move_range = (self.move_range[0] + self.xspd*self.dir, self.move_range[1] + self.xspd*self.dir)
+            self.pos = (self.x, self.y)
 
-                self.enemy_attack(player)
+            self.enemy_attack(player)
 
     def enemy_attack(self, player):
         # do some attack movements

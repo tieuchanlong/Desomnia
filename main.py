@@ -84,23 +84,32 @@ def section_gameplay(section):
 
     # moving enemies
     for i in range(len(section.moving_enemies)):
-        section.moving_enemies[i].enemy_move(section.stable_grounds)
+        if (section.moving_enemies[i].hp > 0):
+            section.moving_enemies[i].enemy_move(section.stable_grounds)
 
     for i in range(len(section.moving_enemies)):
-        section.moving_enemies[i].enemy_follow(Anna)
+        if (section.moving_enemies[i].hp > 0):
+            section.moving_enemies[i].enemy_follow(Anna)
 
     for i in range(len(section.stable_enemies)):
-        section.stable_enemies[i].enemy_follow(Anna)
+        if (section.stable_enemies[i].hp > 0):
+            section.stable_enemies[i].enemy_follow(Anna)
 
     for i in range(len(section.stable_enemies)):
-        section.stable_enemies[i].enemy_attack(Anna)
+        if (section.stable_enemies[i].hp > 0):
+            section.stable_enemies[i].enemy_attack(Anna)
 
     if (Anna.player_jump(pressedKey, section.stable_grounds, section.moving_grounds) == False):
         Anna.player_fall(Anna.yspd, section.stable_grounds, section.moving_grounds)
 
     Anna.player_skill(pressedKey, Anna_paint)
+    Anna.player_attack(pressedKey, section)
     Anna_brush.brush_move(Anna)
     Anna_brush.brush_hit(section.moving_enemies)
+    Anna_brush1.brush_stay(Anna)
+
+    for i in range(len(section.throw_stuffs)):
+        section.throw_stuffs[i].stuff_move(section.moving_enemies, section.stable_grounds)
 
     for i in range(len(section.moving_npc)):
         section.moving_npc[i].npc_move(section.stable_grounds)
@@ -160,8 +169,16 @@ def section_gameplay(section):
     for i in range(len(Anna.hp_bars)):
         screen.blit(Anna.hp_bars[i].getSurface(), Anna.hp_bars[i].getPos())
 
+    for i in range(len(section.throw_stuffs)):
+        screen.blit(section.throw_stuffs[i].getSurface(), section.throw_stuffs[i].getPos())
+
     screen.blit(Anna.getSurface(), Anna.getPos())
-    screen.blit(Anna_brush.getSurface(), Anna_brush.getPos())
+    if (Anna_brush.appear == True):
+        screen.blit(Anna_brush.getSurface(), Anna_brush.getPos())
+
+    if (Anna_brush1.appear == True):
+        screen.blit(Anna_brush1.getSurface(), Anna_brush1.getPos())
+
     screen.blit(Anna_paint.getSurface(), Anna_paint.getPos())
 
 def scene_change():
@@ -303,7 +320,9 @@ def section2_init():
     Anna.hp_bars.append(hp_bar(20, 20, 300, 50))
 
     global Anna_brush
-    Anna_brush = brush(120, 10, Anna.x + Anna.width, Anna.y)
+    global Anna_brush1
+    Anna_brush = brush(60, 10, Anna.x + Anna.width, Anna.y)
+    Anna_brush1 = brush(10, 60, Anna.x + Anna.width, Anna.y, 0)
 
     global Anna_paint
     Anna_paint = paint_bar(60, 60, 20, 20)

@@ -23,6 +23,8 @@ kindred = (205,92,92)
 kindblue = (132,112,255)
 hostilered = (255, 0, 0)
 
+###
+
 # Create the window
 screen = pygame.display.set_mode(SCREENDIM) # Create the main surface where all other assets are placed on top
 pygame.display.set_caption(TITLE) # This updates the windows title

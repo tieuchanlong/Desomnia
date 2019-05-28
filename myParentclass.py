@@ -69,6 +69,17 @@ class interactive_object(sprite):
         self.surface = pygame.Surface(self.dim, pygame.SRCALPHA, 32)
         self.surface.fill(self.color)
 
-    def interact(self):
+    def interact(self, pressedKey, player):
         #Add some interaction
-        self.setPos(-100, -100)
+        if (abs(player.x - self.x) <= 150):
+            if (pressedKey[pygame.K_e]):
+                self.setPos(-10000, -10000)
+
+class image(sprite):
+    def __init__(self, fileName, x=0, y=0, width=0, height=0):
+        sprite.__init__(self, x, y)
+        self.width = width
+        self.height = height
+        self.dim = (self.width, self.height)
+        self.surface = pygame.image.load(fileName).convert_alpha()
+

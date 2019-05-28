@@ -1,3 +1,5 @@
+from myObject import *
+
 class section:
     def __init__(self):
         self.moving_enemies = []
@@ -12,13 +14,17 @@ class section:
         self.traps = []
         self.moving_traps = []
         self.hor_ground = 0
+        self.bullets = []
         self.throw_stuffs = []
+        self.gates = []
+        self.control_panels = []
+        self.saving_point = save_point(100, 20, 0, 0)
 
     def move_x(self, distance):
+        self.saving_point.setPos(self.saving_point.x + distance, self.saving_point.y)
+
         for i in range(len(self.stable_enemies)):
             self.stable_enemies[i].setPos(self.stable_enemies[i].x + distance, self.stable_enemies[i].y)
-            for j in range(len(self.stable_enemies[i].bullets)):
-                self.stable_enemies[i].bullets[j].setPos(self.stable_enemies[i].bullets[j].x + distance, self.stable_enemies[i].bullets[j].y)
 
         for i in range(len(self.moving_enemies)):
             self.moving_enemies[i].move_range = (self.moving_enemies[i].move_range[0] + distance, self.moving_enemies[i].move_range[1] + distance)
@@ -26,12 +32,23 @@ class section:
 
         for i in range(len(self.stable_grounds)):
             self.stable_grounds[i].setPos(self.stable_grounds[i].x + distance, self.stable_grounds[i].y)
+            for j in range(len(self.stable_grounds[i].images)):
+                self.stable_grounds[i].images[j].setPos(self.stable_grounds[i].images[j].x + distance, self.stable_grounds[i].images[j].y)
 
         for i in range(len(self.stairs)):
             self.stairs[i].setPos(self.stairs[i].x + distance, self.stairs[i].y)
 
         for i in range(len(self.items)):
             self.items[i].setPos(self.items[i].x + distance, self.items[i].y)
+
+        for i in range(len(self.gates)):
+            self.gates[i].setPos(self.gates[i].x + distance, self.gates[i].y)
+
+        for i in range(len(self.control_panels)):
+            self.control_panels[i].setPos(self.control_panels[i].x + distance, self.control_panels[i].y)
+
+        for i in range(len(self.bullets)):
+            self.bullets[i].setPos(self.bullets[i].x + distance, self.bullets[i].y)
 
         for i in range(len(self.throw_stuffs)):
             self.throw_stuffs[i].setPos(self.throw_stuffs[i].x + distance, self.throw_stuffs[i].y)
@@ -57,22 +74,33 @@ class section:
             self.moving_grounds[i].set_rangex(self.moving_grounds[i].move_rangex[0] + distance, self.moving_grounds[i].move_rangex[1] + distance)
 
     def move_y(self, distance):
+        self.saving_point.setPos(self.saving_point.x, self.saving_point.y + distance)
+
         for i in range(len(self.stable_enemies)):
             self.stable_enemies[i].setPos(self.stable_enemies[i].x, self.stable_enemies[i].y + distance)
-            for j in range(len(self.stable_enemies[i].bullets)):
-                self.stable_enemies[i].bullets[j].setPos(self.stable_enemies[i].bullets[j].x, self.stable_enemies[i].bullets[j].y + distance)
 
         for i in range(len(self.moving_enemies)):
             self.moving_enemies[i].setPos(self.moving_enemies[i].x, self.moving_enemies[i].y + distance)
 
         for i in range(len(self.stable_grounds)):
             self.stable_grounds[i].setPos(self.stable_grounds[i].x, self.stable_grounds[i].y + distance)
+            for j in range(len(self.stable_grounds[i].images)):
+                self.stable_grounds[i].images[j].setPos(self.stable_grounds[i].images[j].x, self.stable_grounds[i].images[j].y + distance)
 
         for i in range(len(self.stairs)):
             self.stairs[i].setPos(self.stairs[i].x, self.stairs[i].y + distance)
 
         for i in range(len(self.items)):
             self.items[i].setPos(self.items[i].x, self.items[i].y + distance)
+
+        for i in range(len(self.gates)):
+            self.gates[i].setPos(self.gates[i].x, self.gates[i].y + distance)
+
+        for i in range(len(self.control_panels)):
+            self.control_panels[i].setPos(self.control_panels[i].x, self.control_panels[i].y + distance)
+
+        for i in range(len(self.bullets)):
+            self.bullets[i].setPos(self.bullets[i].x, self.bullets[i].y + distance)
 
         for i in range(len(self.throw_stuffs)):
             self.throw_stuffs[i].setPos(self.throw_stuffs[i].x, self.throw_stuffs[i].y + distance)

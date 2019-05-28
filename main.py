@@ -52,8 +52,9 @@ global start_x
 global start_y
 global end_x
 global end_y
+global boss
 
-section_area = 0
+section_area = 6
 scenechange = -1
 save_count = 0
 saving = (6, 0, 0)
@@ -458,7 +459,7 @@ def section2_init():
 
     start_x = section2.stable_grounds[0].x
     start_y = -HEIGHT
-    end_x = section2.stable_grounds[1].x
+    end_x = section2.stable_grounds[10].x
     end_y = section2.stable_grounds[7].y
 
     # Inititate the player
@@ -505,14 +506,14 @@ def section2_init():
 
 
     # Enemies
-    section2.moving_enemies.append(enemy(30, 30, section2.stable_grounds[5].x + 300, section2.stable_grounds[5].y - 30))
-    section2.moving_enemies.append(enemy(30, 30, section2.stable_grounds[5].x + 1000, section2.stable_grounds[5].y - 30))
-    section2.moving_enemies.append(enemy(30, 30, section2.stable_grounds[11].x, section2.stable_grounds[11].y - 30))
-    section2.moving_enemies.append(enemy(30, 30, section2.stable_grounds[5].x + 1400, section2.stable_grounds[5].y - 30))
-    section2.moving_enemies.append(enemy(30, 30, section2.stable_grounds[6].x, section2.stable_grounds[6].y - 30))
-    section2.moving_enemies.append(enemy(30, 30, section2.stable_grounds[7].x, section2.stable_grounds[7].y - 30))
-    section2.moving_enemies.append(enemy(30, 30, section2.stable_grounds[8].x, section2.stable_grounds[8].y - 30))
-    section2.moving_enemies.append(enemy(30, 30, section2.stable_grounds[9].x, section2.stable_grounds[9].y - 30))
+    section2.moving_enemies.append(enemy('media/sprite_00.png', 30, 30, section2.stable_grounds[5].x + 300, section2.stable_grounds[5].y - 30))
+    section2.moving_enemies.append(enemy('media/sprite_00.png', 30, 30, section2.stable_grounds[5].x + 1000, section2.stable_grounds[5].y - 30))
+    section2.moving_enemies.append(enemy('media/sprite_00.png', 30, 30, section2.stable_grounds[11].x, section2.stable_grounds[11].y - 30))
+    section2.moving_enemies.append(enemy('media/sprite_00.png', 30, 30, section2.stable_grounds[5].x + 1400, section2.stable_grounds[5].y - 30))
+    section2.moving_enemies.append(enemy('media/sprite_00.png', 30, 30, section2.stable_grounds[6].x, section2.stable_grounds[6].y - 30))
+    section2.moving_enemies.append(enemy('media/sprite_00.png', 30, 30, section2.stable_grounds[7].x, section2.stable_grounds[7].y - 30))
+    section2.moving_enemies.append(enemy('media/sprite_00.png', 30, 30, section2.stable_grounds[8].x, section2.stable_grounds[8].y - 30))
+    section2.moving_enemies.append(enemy('media/sprite_00.png', 30, 30, section2.stable_grounds[9].x, section2.stable_grounds[9].y - 30))
 
     section2.moving_enemies[1].dir = -1
     section2.moving_enemies[2].dir = -1
@@ -524,7 +525,7 @@ def section2_init():
         section2.moving_enemies.append(swimming_enemy(30, 50, section2.waters[0].x + random.randrange(7 * WIDTH)), 10*i)'''
 
     for i in range(len(section2.moving_enemies)):
-        section2.moving_enemies[i].setColor((255, 0, 0))
+        section2.moving_enemies[i].setScale(60, 60)
 
 
     # Initiate background image
@@ -821,7 +822,7 @@ def section4_init():
 
     start_x = section4.stable_grounds[7].x
     start_y = -2*HEIGHT
-    end_x = section4.stable_grounds[1].x + section4.stable_grounds[1].width + 200
+    end_x = section4.stable_grounds[1].x
     end_y = section4.stable_grounds[0].y
 
     # Traps
@@ -939,11 +940,14 @@ def section4_gameplay():
     global section_area
     global save_count
     global saving
+    global end_x
 
     section_gameplay(section4)
     section4.gates[0].enter_gate(pressedKey, Anna)
     section4.gates[1].enter_gate(pressedKey, Anna)
     section4.gates[2].enter_gate(pressedKey, Anna)
+
+    section4.npc[1].npc_talk(pressedKey, Anna)
 
     if (section4.gates[0].active == True and scenechange == -1):
         section_area = 4
@@ -972,6 +976,9 @@ def section4_gameplay():
     if (Anna.hp <= 0):
         section_area = saving[0]
         scenechange = 0
+
+    if (section4.npc[1].talk == True):
+        end_x = max(end_x, section4.stable_grounds[0].x + 1000)
 
 
 

@@ -204,7 +204,7 @@ class enemy(sprite):
         self.dim = (self.width, self.height)
         self.typ = random.randrange(3)
         self.surface = pygame.Surface(self.dim, pygame.SRCALPHA, 32)
-        self.surface.fill(self.color)
+        #self.surface = pygame.image.load(filename).convert_alpha()
         self.xspd = 5
         self.yspd = 10
         self.hp = 5
@@ -215,6 +215,22 @@ class enemy(sprite):
         self.move_range = (self.x - 200, self.x + 200)
         self.bounce = False
 
+
+    def setScale(self, width, height):
+        if (width > self.width):
+            self.x -= (width - self.width)
+        else:
+            self.x += (self.width - width)
+
+        if (height > self.height):
+            self.y -= (height - self.height)
+        else:
+            self.y += (self.height - height)
+
+        self.pos = (self.x, self.y)
+        self.width = width
+        self.height = height
+        self.surface = pygame.transform.scale(self.getSurface(), (width, height))
 
     def set_rangex(self, l, r):
         self.move_range = (l, r)

@@ -1,12 +1,31 @@
 from myParentclass import *
 
 class save_point(interactive_object):
+    def __init__(self, width, height, x=0, y=0, ar=0):
+        interactive_object.__init__(self, width, height, x, y)
+        self.area = ar
+        self.org_x = x
+        self.org_y = y
+
+    def save_game(self, pressedKey, player, section):
+        # save game
+        if (abs(player.x - self.x) <= 150):
+            if (pressedKey[pygame.K_e]):
+                self.setColor((255, 255, 0))
+                return 1, (section, self.org_x, self.org_y + self.height - player.height)
+
+        return 0, (-10, 0, 0)
+
+class control_panel(interactive_object):
     def __init__(self, width, height, x=0, y=0):
         interactive_object.__init__(self, width, height, x, y)
+        self.active = False
 
-    def interact(self, player):
-        # save game
-        return
+    def interact(self, pressedKey, player):
+        if (abs(player.x - self.x) <= 150):
+            if (pressedKey[pygame.K_e]):
+                self.setColor((255, 255, 0))
+                self.active = True
 
 class drawing_piece(interactive_object):
     def __init__(self, width, height, x=0, y=0):
@@ -19,10 +38,16 @@ class drawing_piece(interactive_object):
 class gate(interactive_object):
     def __init__(self, width, height, x=0, y=0):
         interactive_object.__init__(self, width, height, x, y)
+        self.active = False
 
-    def interact(self, player):
-        # get to next level
-        return
+    def enter_gate(self, pressedKey, player):
+        # save game
+        if (abs(player.x - self.x) <= 150):
+            if (pressedKey[pygame.K_e]):
+                self.setColor((255, 255, 0))
+                self.active = True
+
+
 
 class stair(interactive_object):
     def __init__(self, width, height, x=0, y=0):
@@ -101,7 +126,6 @@ class brush(sprite):
     def brush_hit(self, enemies):
         for i in range(len(enemies)):
             if (self.checkcollision(self, enemies[i]) and self.turn == 0):
-                enemies[i].bounce = True
                 enemies[i].stun = True
                 if (self.x < enemies[i].x):
                     enemies[i].dir = 1
@@ -156,5 +180,49 @@ class throw_stuff(sprite):
         self.yspd += 1
         if (self.yspd >= 10):
             self.yspd = 10
+
+        self.pos = (self.x, self.y)
+
+
+class bullet(sprite):
+    def __init__(self, width, height, x=0, y=0, dir=1):
+        sprite.__init__(self, x, y)
+        self.width = width
+        self.height = height
+        self.dir = dir
+        self.dim = (self.width, self.height)
+        self.surface = pygame.Surface(self.dim, pygame.SRCALPHA, 32)
+        self.red = 0
+        self.green = 0
+        self.blue = 0
+        self.color = (0, 0, 0)
+        self.surface.fill(self.color)
+        self.xspd = 15
+        self.yspd = 10
+
+    def bullet_move(self, player): # follow player
+        self.x = self.x + self.xspd*self.dir
+
+        if (self.x > WIDTH or self.x < 0):
+            self.x = -10000
+            self.y = -10000
+            self.dir = 0
+
+        if (self.checkcollision(self, player)):
+            #player take damage animation
+            self.dir = 0
+            self.setPos(-3000, -3000)
+
+            player.jump = -15
+
+            if (player.jump == -15 and player.bounce == False):
+                player.dec_hp()
+
+            player.bounce = True
+
+            if (player.x > self.x):
+                player.dir = 1
+            else:
+                player.dir = -1
 
         self.pos = (self.x, self.y)

@@ -35,7 +35,17 @@ class ground(sprite): # the mid ground for climbing
         self.dim = (self.width, self.height)
         self.typ = random.randrange(3)
         self.surface = pygame.Surface(self.dim, pygame.SRCALPHA, 32)
+        self.setColor((0, 0, 0))
         self.surface.fill(self.color)
+        self.images = []
+        self.images.append(image('media/fullgrassground.png', self.x, self.y, self.width, 40))
+        self.images[0].surface = pygame.transform.scale(self.images[0].getSurface(), (self.width + 30, 60))
+
+        '''i = self.x
+        while (i < self.x + self.width):
+            self.images.append(image('media/grassground.png', i, self.y, 20, 10))
+            if (self.x - self.width - i < 20):
+                self.images.append(image('media/grassground.png', self.x - self.width - 10, self.y, 20, 10))'''
 
 class moving_ground(ground):
     def __init__(self, width, height, x=0, y=0):  # add frames input
@@ -55,10 +65,10 @@ class moving_ground(ground):
 
     def ground_move(self, player, onX = 1, onY = 1):  # try to detect player
         if (onX == 1):
-            if (self.dir == -1):
+            '''if (self.dir == -1):
                 self.xspd = 10
             else:
-                self.xspd = 25
+                self.xspd = 25'''
 
             self.x += self.xspd  * self.dir
 
@@ -84,7 +94,7 @@ class moving_ground(ground):
                 self.y = self.move_rangey[0]
                 self.dir1 = -self.dir1
 
-            if (self.x > self.move_rangey[1] - self.height):
+            if (self.y > self.move_rangey[1] - self.height):
                 self.y = self.move_rangey[1] - self.height
                 self.dir1 = -self.dir1
 
@@ -100,16 +110,19 @@ class trap(sprite):
         self.dim = (self.width, self.height)
         self.typ = random.randrange(3)
         self.surface = pygame.Surface(self.dim, pygame.SRCALPHA, 32)
+        self.red = 0
+        self.green = 0
+        self.blue = 0
+        self.color = (self.red, self.green, self.blue)
         self.surface.fill(self.color)
 
     def trap_attack(self, player):
         if (self.checkcollision(self, player)):
-            player.hp -=1
-            # do player loses health
+            player.dec_hp()
             player.jump = -15
             player.bounce = True
 
-            if (player.x > self.x):
+            if (player.x > self.x + self.width/2):
                 player.dir = 1
             else:
                 player.dir = -1
@@ -135,11 +148,11 @@ class moving_trap(trap):
             self.dir1 = -1
 
         if (self.checkcollision(self, player)):
-            player.hp -= 1
+            player.dec_hp()
             player.jump = -15
             player.bounce = True
 
-            if (player.x > self.x):
+            if (player.x > self.x + self.width/2):
                 player.dir = 1
             else:
                 player.dir = -1
@@ -155,3 +168,28 @@ class water(sprite):
         self.typ = random.randrange(3)
         self.surface = pygame.Surface(self.dim, pygame.SRCALPHA, 32)
         self.surface.fill(self.color)
+
+class rock(sprite):
+    def __init__(self, width, height):  # add frames input
+        x = random.randrange(0, WIDTH - width)
+        y = - random.randrange(height, 100)
+        sprite.__init__(self, x, y)
+        self.width = width
+        self.height = height
+        self.dim = (self.width, self.height)
+        self.yspd = 20
+        self.dir1 = 1
+        self.surface = pygame.Surface(self.dim, pygame.SRCALPHA, 32)
+        self.surface.fill(self.color)
+
+    def rock_move(self, player):
+        self.y += self.dir1 * self.yspd
+
+        if (self.y > HEIGHT):
+            self.yspd = 0
+            self.setPos(-10000, -10000)
+
+        if (self.checkcollision(self, player)):
+            player.hp -= 1
+            self.yspd = 0
+            self.setPos(-10000, -10000)

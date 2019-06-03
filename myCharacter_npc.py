@@ -67,12 +67,23 @@ class npc(sprite):
                 self.talk = True
 
     def npc_idle(self):
-        print(self.imagecounter)
-        self.imagecounter += 1
-        if self.imagecounter >= 30:
-            self.imagecounter = 0
+        if self.dir == 1:
+            self.imagecounter += 1
+            if self.imagecounter >= 30:
+                self.imagecounter = 0
 
-        self.surface = pygame.image.load('media/npc_idle_0' + str(int(self.imagecounter/10)) + '.png').convert_alpha()
+            npc_default_pos = pygame.image.load('media/npc_idle_0' + str(int(self.imagecounter / 10)) + '.png').convert_alpha()
+            self.surface = pygame.transform.flip(npc_default_pos, True, False)
+
+        else:
+            self.imagecounter += 1
+            if self.imagecounter >= 30:
+                self.imagecounter = 0
+
+            self.surface = pygame.image.load('media/npc_idle_0' + str(int(self.imagecounter/10)) + '.png').convert_alpha()
+
+
+
 
 
 running = True
@@ -87,6 +98,8 @@ while running:
 
     pressedKeys = pygame.key.get_pressed()
     screen.fill(WHITE)
+
+    npc00.dir = 1
 
     npc00.npc_idle()
     #npc00.setColor(BLACK)

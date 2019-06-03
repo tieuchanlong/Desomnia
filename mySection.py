@@ -19,6 +19,7 @@ class section:
         self.gates = []
         self.control_panels = []
         self.saving_point = save_point(100, 20, 0, 0)
+        self.instruction_points = []
 
     def move_x(self, distance):
         self.saving_point.setPos(self.saving_point.x + distance, self.saving_point.y)
@@ -32,14 +33,16 @@ class section:
 
         for i in range(len(self.stable_grounds)):
             self.stable_grounds[i].setPos(self.stable_grounds[i].x + distance, self.stable_grounds[i].y)
-            for j in range(len(self.stable_grounds[i].images)):
-                self.stable_grounds[i].images[j].setPos(self.stable_grounds[i].images[j].x + distance, self.stable_grounds[i].images[j].y)
+
 
         for i in range(len(self.stairs)):
             self.stairs[i].setPos(self.stairs[i].x + distance, self.stairs[i].y)
 
         for i in range(len(self.items)):
             self.items[i].setPos(self.items[i].x + distance, self.items[i].y)
+
+        for i in range(len(self.instruction_points)):
+            self.instruction_points[i].setPos(self.instruction_points[i].x + distance, self.instruction_points[i].y)
 
         for i in range(len(self.gates)):
             self.gates[i].setPos(self.gates[i].x + distance, self.gates[i].y)
@@ -84,14 +87,16 @@ class section:
 
         for i in range(len(self.stable_grounds)):
             self.stable_grounds[i].setPos(self.stable_grounds[i].x, self.stable_grounds[i].y + distance)
-            for j in range(len(self.stable_grounds[i].images)):
-                self.stable_grounds[i].images[j].setPos(self.stable_grounds[i].images[j].x, self.stable_grounds[i].images[j].y + distance)
+
 
         for i in range(len(self.stairs)):
             self.stairs[i].setPos(self.stairs[i].x, self.stairs[i].y + distance)
 
         for i in range(len(self.items)):
             self.items[i].setPos(self.items[i].x, self.items[i].y + distance)
+
+        for i in range(len(self.instruction_points)):
+            self.instruction_points[i].setPos(self.instruction_points[i].x, self.instruction_points[i].y + distance)
 
         for i in range(len(self.gates)):
             self.gates[i].setPos(self.gates[i].x, self.gates[i].y + distance)

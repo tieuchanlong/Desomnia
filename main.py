@@ -52,9 +52,26 @@ global start_x
 global start_y
 global end_x
 global end_y
-global boss
+global flowers
+global npc2_talk
+global boss_trigger
+global boss_fight
+global big_boss
 
-section_area = 6
+big_boss = boss(300, 200, 0, 0)
+big_boss.setColor((255, 0, 0))
+
+boss_trigger = trigger(50, HEIGHT, 0, 0)
+boss_trigger.setColor((255, 255, 0))
+
+flowers = []
+npc2_talk = False
+boss_fight = False
+
+for i in range(3):
+    flowers.append(interactive_object(20, 20, 0, 0))
+
+section_area = 0
 scenechange = -1
 save_count = 0
 saving = (6, 0, 0)
@@ -86,11 +103,22 @@ def section_gameplay(section):
     global start_y
     global end_x
     global end_y
+    global big_boss
+    global boss_trigger
+    global section_area
+    global scenechange
 
     if (Anna.x + Anna.width / 2 > startscrolling_x):
         startbackground_x += Anna.x + Anna.width / 2 - startscrolling_x
         if (startbackground_x < end_x):
             section.move_x(-(Anna.x + Anna.width / 2 - startscrolling_x))
+            big_boss.move_x(-(Anna.x + Anna.width / 2 - startscrolling_x))
+
+            for i in range(len(big_boss.rocks)):
+                big_boss.rocks[i].move_x(-(Anna.x + Anna.width / 2 - startscrolling_x))
+
+            boss_trigger.move_x(-(Anna.x + Anna.width / 2 - startscrolling_x))
+
             Anna.setPos(startscrolling_x - Anna.width / 2, Anna.y)
         else:
             startbackground_x = end_x
@@ -99,6 +127,13 @@ def section_gameplay(section):
         startbackground_x -= startscrolling_x - Anna.x - Anna.width / 2
         if (startbackground_x > start_x):
             section.move_x(startscrolling_x - Anna.x - Anna.width / 2)
+            big_boss.move_x(startscrolling_x - Anna.x - Anna.width / 2)
+
+            for i in range(len(big_boss.rocks)):
+                big_boss.rocks[i].move_x(startscrolling_x - Anna.x - Anna.width / 2)
+
+            boss_trigger.move_x(startscrolling_x - Anna.x - Anna.width / 2)
+
             Anna.setPos(startscrolling_x - Anna.width / 2, Anna.y)
         else:
             startbackground_x = start_x
@@ -107,6 +142,13 @@ def section_gameplay(section):
         startbackground_y += Anna.y + Anna.height / 2 - startscrolling_y
         if (startbackground_y < end_y):
             section.move_y(-(Anna.y + Anna.height / 2 - startscrolling_y))
+            big_boss.move_y(-(Anna.y + Anna.height / 2 - startscrolling_y))
+
+            for i in range(len(big_boss.rocks)):
+                big_boss.rocks[i].move_y(-(Anna.y + Anna.height / 2 - startscrolling_y))
+
+            boss_trigger.move_y(-(Anna.y + Anna.height / 2 - startscrolling_y))
+
             Anna.setPos(Anna.x, startscrolling_y - Anna.height / 2)
         else:
             startbackground_y = end_y
@@ -115,6 +157,13 @@ def section_gameplay(section):
         startbackground_y -= startscrolling_y - Anna.y - Anna.height / 2
         if (startbackground_y > start_y):
             section.move_y(startscrolling_y - Anna.y - Anna.height / 2)
+            big_boss.move_y(startscrolling_y - Anna.y - Anna.height / 2)
+
+            for i in range(len(big_boss.rocks)):
+                big_boss.rocks[i].move_y(startscrolling_y - Anna.y - Anna.height / 2)
+
+            boss_trigger.move_y(startscrolling_y - Anna.y - Anna.height / 2)
+
             Anna.setPos(Anna.x, startscrolling_y - Anna.height / 2)
         else:
             startbackground_y = start_y
@@ -161,7 +210,7 @@ def section_gameplay(section):
     Anna_brush1.brush_stay(Anna)
 
     for i in range(len(section.throw_stuffs)):
-        section.throw_stuffs[i].stuff_move(section.moving_enemies, section.stable_grounds)
+        section.throw_stuffs[i].stuff_move(section.moving_enemies, big_boss, section.stable_grounds)
 
     for i in range(len(section.moving_npc)):
         section.moving_npc[i].npc_move(section.stable_grounds)
@@ -182,6 +231,16 @@ def section_gameplay(section):
         if (section.npc[i].talk):
             section.npc[i].npc_talk(pressedKey, Anna)
 
+    if (Anna.y > HEIGHT):
+        Anna.hp = 0
+
+    if (Anna.hp <= 0):
+        section_area = saving[0]
+        scenechange = 0
+
+
+
+
     ### --- Blit section --- ###
     for i in range(len(bg)):
         screen.blit(bg[i], bg_pos[i])
@@ -200,8 +259,6 @@ def section_gameplay(section):
     # grounds
     for i in range(len(section.stable_grounds)):
         screen.blit(section.stable_grounds[i].getSurface(), section.stable_grounds[i].getPos())
-        for j in range(len(section.stable_grounds[i].images)):
-            screen.blit(section.stable_grounds[i].images[j].getSurface(), section.stable_grounds[i].images[j].getPos())
 
     for i in range(len(section.traps)):
         screen.blit(section.traps[i].getSurface(), section.traps[i].getPos())
@@ -223,6 +280,9 @@ def section_gameplay(section):
 
     for i in range(len(section.gates)):
         screen.blit(section.gates[i].getSurface(), section.gates[i].getPos())
+
+    for i in range(len(section.instruction_points)):
+        screen.blit(section.instruction_points[i].getSurface(), section.instruction_points[i].getPos())
 
     for i in range(len(section.control_panels)):
         screen.blit(section.control_panels[i].getSurface(), section.control_panels[i].getPos())
@@ -320,6 +380,8 @@ def section1_init():
     section1.moving_npc[0].set_rangex(section1.stable_grounds[6].x, section1.npc[3].x - 30)
     section1.moving_npc[0].setColor((255, 0, 0))
 
+    section1.instruction_points.append(instruction_point(50, 50, section1.stable_grounds[0].x + 200, section1.stable_grounds[0].y - 50))
+
     # Set up boundaries
     global start_x
     global start_y
@@ -365,10 +427,10 @@ def section1_init():
     global startbackground_y
     bg = []
     bg_pos = []
-    bg.append(pygame.image.load('media/mountains.png').convert())
-    bg.append(pygame.image.load('media/mountains.png').convert())
-    bg.append(pygame.image.load('media/mountains.png').convert())
-    bg.append(pygame.image.load('media/mountains.png').convert())
+    bg.append(pygame.image.load('media/forestbackground01.png').convert())
+    bg.append(pygame.image.load('media/forestbackground01.png').convert())
+    bg.append(pygame.image.load('media/forestbackground01.png').convert())
+    bg.append(pygame.image.load('media/forestbackground01.png').convert())
     bg_pos.append([0, -HEIGHT])
     bg_pos.append([bg_pos[0][0] + bg[0].get_width(), -HEIGHT])
     bg_pos.append([0, bg_pos[0][1] + bg[0].get_height()])
@@ -383,6 +445,7 @@ def section1_gameplay():
     global  scenechange
     global section_area
     global saving
+    global big_boss
 
     if (scenechange != 1):
         section_gameplay(section1)
@@ -416,10 +479,11 @@ def section2_init():
     section2.stable_grounds.append(ground(150, 50, section2.stable_grounds[11].x + 50, section2.stable_grounds[13].y - 100))
 
     section2.waters.append(water(7 * WIDTH, 2000, section2.stable_grounds[0].x, section2.stable_grounds[0].y + 100))
-    section2.waters[0].setColor((113, 226, 230))
 
     endbackground2_x = section2.waters[0].x + section2.waters[0].width - 900
     endbackground2_y = section2.waters[0].y
+
+    section2.instruction_points.append(instruction_point(50, 50, section2.stable_grounds[1].x + 200, section2.stable_grounds[1].y - 50))
 
     # Traps
     section2.traps.append(trap(50, section2.waters[0].height, section2.stable_grounds[5].x - 50, section2.waters[0].y))
@@ -490,11 +554,9 @@ def section2_init():
     # NPC
     section2.moving_npc.append(moving_npc(30, 30, section2.stable_grounds[0].x, section2.stable_grounds[0].y - 30))
     section2.moving_npc[0].set_rangex(section2.stable_grounds[0].x, section2.stable_grounds[1].x - 130)
-    section2.moving_npc[0].setColor((255, 0, 0))
 
     section2.moving_npc.append(moving_npc(30, 30, section2.moving_npc[0].x + section2.moving_npc[0].width + 100, section2.stable_grounds[0].y - 30))
     section2.moving_npc[1].set_rangex(section2.moving_npc[1].x, section2.stable_grounds[1].x - 30)
-    section2.moving_npc[1].setColor((255, 0, 0))
 
 
     section2.hor_ground = 1
@@ -506,14 +568,14 @@ def section2_init():
 
 
     # Enemies
-    section2.moving_enemies.append(enemy('media/sprite_00.png', 30, 30, section2.stable_grounds[5].x + 300, section2.stable_grounds[5].y - 30))
-    section2.moving_enemies.append(enemy('media/sprite_00.png', 30, 30, section2.stable_grounds[5].x + 1000, section2.stable_grounds[5].y - 30))
-    section2.moving_enemies.append(enemy('media/sprite_00.png', 30, 30, section2.stable_grounds[11].x, section2.stable_grounds[11].y - 30))
-    section2.moving_enemies.append(enemy('media/sprite_00.png', 30, 30, section2.stable_grounds[5].x + 1400, section2.stable_grounds[5].y - 30))
-    section2.moving_enemies.append(enemy('media/sprite_00.png', 30, 30, section2.stable_grounds[6].x, section2.stable_grounds[6].y - 30))
-    section2.moving_enemies.append(enemy('media/sprite_00.png', 30, 30, section2.stable_grounds[7].x, section2.stable_grounds[7].y - 30))
-    section2.moving_enemies.append(enemy('media/sprite_00.png', 30, 30, section2.stable_grounds[8].x, section2.stable_grounds[8].y - 30))
-    section2.moving_enemies.append(enemy('media/sprite_00.png', 30, 30, section2.stable_grounds[9].x, section2.stable_grounds[9].y - 30))
+    section2.moving_enemies.append(enemy(30, 30, section2.stable_grounds[5].x + 300, section2.stable_grounds[5].y - 30))
+    section2.moving_enemies.append(enemy(30, 30, section2.stable_grounds[5].x + 1000, section2.stable_grounds[5].y - 30))
+    section2.moving_enemies.append(enemy(30, 30, section2.stable_grounds[11].x, section2.stable_grounds[11].y - 30))
+    section2.moving_enemies.append(enemy(30, 30, section2.stable_grounds[5].x + 1400, section2.stable_grounds[5].y - 30))
+    section2.moving_enemies.append(enemy(30, 30, section2.stable_grounds[6].x, section2.stable_grounds[6].y - 30))
+    section2.moving_enemies.append(enemy(30, 30, section2.stable_grounds[7].x, section2.stable_grounds[7].y - 30))
+    section2.moving_enemies.append(enemy(30, 30, section2.stable_grounds[8].x, section2.stable_grounds[8].y - 30))
+    section2.moving_enemies.append(enemy(30, 30, section2.stable_grounds[9].x, section2.stable_grounds[9].y - 30))
 
     section2.moving_enemies[1].dir = -1
     section2.moving_enemies[2].dir = -1
@@ -521,8 +583,6 @@ def section2_init():
     section2.items.append(interactive_object(20, 20, section2.stable_grounds[14].x + 50, section2.stable_grounds[14].y - 30))
     section2.items[0].setColor((255, 255, 0))
 
-    '''for i in range(20):
-        section2.moving_enemies.append(swimming_enemy(30, 50, section2.waters[0].x + random.randrange(7 * WIDTH)), 10*i)'''
 
     for i in range(len(section2.moving_enemies)):
         section2.moving_enemies[i].setScale(60, 60)
@@ -537,10 +597,10 @@ def section2_init():
     global startbackground_y
     bg = []
     bg_pos = []
-    bg.append(pygame.image.load('media/mountains.png').convert())
-    bg.append(pygame.image.load('media/mountains.png').convert())
-    bg.append(pygame.image.load('media/mountains.png').convert())
-    bg.append(pygame.image.load('media/mountains.png').convert())
+    bg.append(pygame.image.load('media/forestbackground03.png').convert())
+    bg.append(pygame.image.load('media/forestbackground03.png').convert())
+    bg.append(pygame.image.load('media/forestbackground03.png').convert())
+    bg.append(pygame.image.load('media/forestbackground03.png').convert())
     bg_pos.append([section2.stable_grounds[0].x, -HEIGHT])
     bg_pos.append([bg_pos[0][0] + bg[0].get_width(), -HEIGHT])
     bg_pos.append([bg_pos[1][0] + bg[1].get_width(), -HEIGHT])
@@ -562,6 +622,7 @@ def section2_gameplay():
     global  endbackground1_y
     global saving
     global save_count
+    global big_boss
 
     if (scenechange != 1):
         section_gameplay(section2)
@@ -590,7 +651,7 @@ def section2_gameplay():
         section_area = 2
         scenechange = 0
 
-def section3_init():
+def section3_init(): # Add 1 more trap
     # Initiate the first section
     global section3
     global start_move
@@ -616,6 +677,7 @@ def section3_init():
     section3.stable_grounds.append(ground(100, 50, section3.stable_grounds[1].x + section3.stable_grounds[1].width, section3.stable_grounds[11].y - 150))
     section3.stable_grounds.append(ground(100, 50, section3.stable_grounds[4].x - 100, section3.stable_grounds[14].y - 100))
     section3.stable_grounds.append(ground(100, 50, section3.stable_grounds[1].x + section3.stable_grounds[1].width, section3.stable_grounds[15].y - 150))
+    section3.stable_grounds.append(ground(50, 2000, section3.stable_grounds[13].x + section3.stable_grounds[13].width, section3.stable_grounds[13].y - 500))
 
     section3.moving_grounds.append(moving_ground(100, 50, section3.stable_grounds[0].x + section3.stable_grounds[0].width + 200, section3.stable_grounds[0].y - 160))
     section3.moving_grounds[0].set_rangex(section3.stable_grounds[0].x + section3.stable_grounds[0].width, section3.stable_grounds[1].x)
@@ -633,6 +695,7 @@ def section3_init():
     section3.moving_grounds.append(moving_ground(200, 50, section3.stable_grounds[0].x - 400, section3.stable_grounds[0].y - 640))
     section3.moving_grounds[3].set_rangex(section3.stable_grounds[0].x + section3.stable_grounds[0].width - 300, section3.stable_grounds[1].x)
     section3.moving_grounds[3].set_rangey(section3.moving_grounds[3].y, section3.moving_grounds[3].y)
+
 
     global endbackground3_x
     global endbackground3_y
@@ -698,7 +761,8 @@ def section3_init():
     section3.items[2].setColor((255, 255, 0))
 
     section3.gates.append(gate(50, 60, section3.stable_grounds[8].x + 200, section3.stable_grounds[8].y - 60))
-    section3.gates[0].setColor((255, 255, 0))
+
+    section3.instruction_points.append(instruction_point(50, 50, section3.stable_grounds[1].x + 200, section3.stable_grounds[1].y - 50))
 
 
     section3.control_panels.append(control_panel(40, 40, section3.stable_grounds[4].x + section3.stable_grounds[13].width - 100, section3.stable_grounds[4].y - 40))
@@ -711,8 +775,6 @@ def section3_init():
     section3.traps.append(trap(section3.stable_grounds[7].x - section3.stable_grounds[6].x - section3.stable_grounds[6].width, section3.stable_grounds[7].height, section3.stable_grounds[6].x + section3.stable_grounds[6].width, section3.stable_grounds[7].y))
     section3.traps.append(trap(section3.stable_grounds[8].x - section3.stable_grounds[7].x - section3.stable_grounds[7].width, section3.stable_grounds[8].height, section3.stable_grounds[7].x + section3.stable_grounds[7].width, section3.stable_grounds[8].y))
 
-    for i in range(len(section3.traps)):
-        section3.traps[i].setColor(BLACK)
 
     # Initiate background image
     global bg
@@ -750,6 +812,7 @@ def section3_gameplay():
     global save_count
     global start_move
     global move_count
+    global big_boss
 
     section_gameplay(section3)
     section3.gates[0].enter_gate(pressedKey, Anna)
@@ -764,6 +827,9 @@ def section3_gameplay():
         section_area = 2
         saving = (2, endbackground2_x - Anna.width - 50, endbackground2_y - Anna.y)
         scenechange = 0
+
+    if (Anna.x > WIDTH - Anna.width):
+        Anna.setPos(WIDTH - Anna.width, Anna.y)
 
 
     if (section3.items[2].x <= -5000 and section3.items[2].y <= -5000):
@@ -822,7 +888,7 @@ def section4_init():
 
     start_x = section4.stable_grounds[7].x
     start_y = -2*HEIGHT
-    end_x = section4.stable_grounds[1].x
+    end_x = section4.stable_grounds[0].x + section4.stable_grounds[0].width
     end_y = section4.stable_grounds[0].y
 
     # Traps
@@ -852,7 +918,6 @@ def section4_init():
     Anna_paint = paint_bar(60, 60, 20, 20)
 
     section4.saving_point = save_point(100, 20, section4.stable_grounds[1].x + 10, section4.stable_grounds[1].y - 20)
-
 
 
     # Enemies
@@ -889,24 +954,13 @@ def section4_init():
     section4.npc.append(npc(30, 30, section4.stable_grounds[9].x + section4.stable_grounds[9].width - 30, section4.stable_grounds[9].y - 30))
     section4.npc.append(npc(50, 50, section4.stable_grounds[1].x + 100, section4.stable_grounds[1].y - 50))
     section4.npc.append(npc(70, 70, section4.stable_grounds[0].x + section4.stable_grounds[0].width - 200, section4.stable_grounds[0].y - 70))
-    section4.npc[1].talk = True
-    section4.npc[2].talk = True
 
     # Items
-    section4.items.append(interactive_object(20, 20, section4.stable_grounds[3].x + 200, section4.stable_grounds[3].y - 30))
-    section4.items[0].setColor((255, 255, 0))
-
-    section4.items.append(interactive_object(20, 20, section4.stable_grounds[8].x + 100, section4.stable_grounds[8].y - 30))
-    section4.items[1].setColor((255, 255, 0))
-
     section4.gates.append(gate(50, 60, section4.stable_grounds[2].x + 50, section4.stable_grounds[2].y - 60))
-    section4.gates[0].setColor((255, 255, 0))
 
     section4.gates.append(gate(50, 60, section4.moving_grounds[2].x + 50, section4.moving_grounds[2].y - 60))
-    section4.gates[1].setColor((255, 255, 0))
 
     section4.gates.append(gate(50, 60, section4.stable_grounds[3].x + 50, section4.stable_grounds[3].y - 60))
-    section4.gates[2].setColor((255, 255, 0))
 
     # Initiate background image
     global bg
@@ -941,13 +995,34 @@ def section4_gameplay():
     global save_count
     global saving
     global end_x
+    global big_boss
 
-    section_gameplay(section4)
     section4.gates[0].enter_gate(pressedKey, Anna)
     section4.gates[1].enter_gate(pressedKey, Anna)
     section4.gates[2].enter_gate(pressedKey, Anna)
 
-    section4.npc[1].npc_talk(pressedKey, Anna)
+    # Count flowers collected
+    flowercount = 0
+    for i in range(len(flowers)):
+        if (flowers[i].collect == True):
+            flowercount += 1
+
+    if (flowercount == 0):
+        section4.npc[2].npc_talk(pressedKey, Anna)
+        # load some other dialogues
+    elif (flowercount < len(flowers)):
+        section4.npc[2].npc_talk(pressedKey, Anna)
+        # load some dialogues
+    else:
+        section4.npc[2].npc_talk(pressedKey, Anna)
+
+    if (flowercount < len(flowers)):
+        if (Anna.x >= end_x - 100):
+            Anna.x = section4.stable_grounds[1].x + section4.stable_grounds[1].width + 100
+            Anna.setPos(Anna.x, Anna.y)
+
+    section_gameplay(section4)
+
 
     if (section4.gates[0].active == True and scenechange == -1):
         section_area = 4
@@ -973,18 +1048,12 @@ def section4_gameplay():
         saving = (14, 0, 720)
         scenechange = 0
 
-    if (Anna.hp <= 0):
-        section_area = saving[0]
-        scenechange = 0
-
-    if (section4.npc[1].talk == True):
-        end_x = max(end_x, section4.stable_grounds[0].x + 1000)
-
-
 
 def section5_init():
     # Initiate the first section
     global section5
+    global flowers
+
     section5 = section()
 
     section5.stable_grounds.append(ground(1000, 500, -500, HEIGHT - 100))
@@ -1048,14 +1117,13 @@ def section5_init():
     section5.waters.append(water(section5.stable_grounds[0].x - section5.stable_grounds[7].x - section5.stable_grounds[7].width, 1000, section5.stable_grounds[7].x + section5.stable_grounds[7].width, section5.stable_grounds[7].y + 200))
 
     # Items
-    section5.items.append(interactive_object(20, 20, section5.stable_grounds[6].x + 50, section5.stable_grounds[6].y - 30))
-    section5.items[0].setColor((255, 255, 0))
+    flowers[0].setPos(section5.stable_grounds[7].x + 50, section5.stable_grounds[7].y - 30)
+    flowers[0].surface = pygame.image.load('media/flower.png').convert_alpha()
 
-    section5.items.append(interactive_object(20, 20, section5.stable_grounds[7].x + 50, section5.stable_grounds[7].y - 30))
-    section5.items[1].setColor((255, 255, 0))
+    flowers[1].setPos(section5.stable_grounds[5].x + 50, section5.stable_grounds[5].y - 30)
+    flowers[1].surface = pygame.image.load('media/flower.png').convert_alpha()
 
     section5.gates.append(gate(40, 60, section5.stable_grounds[1].x + 50, section5.stable_grounds[1].y - 60))
-    section5.items[0].setColor((255, 255, 0))
 
     # Initiate background image
     global bg
@@ -1089,6 +1157,12 @@ def section5_gameplay():
     global section_area
     global save_count
     global saving
+    global flowers
+    global big_boss
+
+    if (npc2_talk == True):
+        flowers[0].interact(pressedKey, Anna)
+        flowers[1].interact(pressedKey, Anna)
 
     section_gameplay(section5)
 
@@ -1100,9 +1174,6 @@ def section5_gameplay():
         saving = (6, 3600, HEIGHT - 900)
         scenechange = 0
 
-    '''if (Anna.x >= WIDTH and scenechange == -1):
-        section_area = 10
-        scenechange = 0'''
 
 def section6_init():
     # Initiate the first section
@@ -1133,6 +1204,15 @@ def section6_init():
     start_y = -2 * HEIGHT
     end_x = section6.stable_grounds[4].x
     end_y = section6.stable_grounds[11].y + section6.stable_grounds[11].height
+
+    # Set up the boss
+    global big_boss
+    big_boss = boss(300, 200, section6.stable_grounds[11].x + 50, section6.stable_grounds[11].y - 200)
+    big_boss.setColor((255, 0, 0))
+
+    global boss_trigger
+    boss_trigger = trigger(50, HEIGHT, section6.stable_grounds[11].x + WIDTH/2, section6.stable_grounds[11].y - HEIGHT)
+    boss_trigger.setColor((255, 255, 0))
 
     # Inititate the player
     global Anna
@@ -1170,41 +1250,30 @@ def section6_init():
     for i in range(len(section6.moving_enemies)):
         section6.moving_enemies[i].setColor((255, 0, 0))
 
-    global section_boss
-    section_boss = boss(300, 200, section6.stable_grounds[11].x, section6.stable_grounds[11].y - 125)
-    section_boss.setColor((255, 0, 0))
 
     section6.moving_traps.append(moving_trap(300, 2000, section6.stable_grounds[3].x + section6.stable_grounds[3].width + 40, section6.stable_grounds[0].y + 200))
     section6.moving_traps[0].set_rangey(section6.stable_grounds[0].y - 300, section6.stable_grounds[0].y + 200)
-    section6.moving_traps[0].setColor(BLACK)
 
     section6.moving_traps.append(moving_trap(300, 2000, section6.stable_grounds[2].x + section6.stable_grounds[2].width + 40, section6.stable_grounds[0].y + 200))
     section6.moving_traps[1].set_rangey(section6.stable_grounds[0].y - 300, section6.stable_grounds[0].y + 200)
-    section6.moving_traps[1].setColor(BLACK)
 
     section6.moving_traps.append(moving_trap(300, 2000, section6.stable_grounds[1].x + section6.stable_grounds[1].width + 40, section6.stable_grounds[0].y + 200))
     section6.moving_traps[2].set_rangey(section6.stable_grounds[0].y - 300, section6.stable_grounds[0].y + 200)
-    section6.moving_traps[2].setColor(BLACK)
 
     section6.moving_traps.append(moving_trap(300, 2000, section6.stable_grounds[0].x + section6.stable_grounds[0].width + 40, section6.stable_grounds[0].y + 200))
     section6.moving_traps[3].set_rangey(section6.stable_grounds[0].y - 300, section6.stable_grounds[0].y + 200)
-    section6.moving_traps[3].setColor(BLACK)
 
     section6.moving_traps.append(moving_trap(100, 400, section6.stable_grounds[12].x + 200, section6.stable_grounds[12].y + 400))
     section6.moving_traps[4].set_rangey(section6.stable_grounds[12].y - 250, section6.stable_grounds[12].y + 400)
-    section6.moving_traps[4].setColor(BLACK)
 
     section6.moving_traps.append(moving_trap(100, 400, section6.moving_traps[4].x + section6.moving_traps[4].width + 200, section6.stable_grounds[12].y - 400))
     section6.moving_traps[5].set_rangey(section6.stable_grounds[12].y - 250, section6.stable_grounds[12].y + 400)
-    section6.moving_traps[5].setColor(BLACK)
 
     section6.moving_traps.append(moving_trap(100, 400, section6.moving_traps[5].x + section6.moving_traps[5].width + 200, section6.stable_grounds[12].y + 400))
     section6.moving_traps[6].set_rangey(section6.stable_grounds[12].y - 250, section6.stable_grounds[12].y + 400)
-    section6.moving_traps[6].setColor(BLACK)
 
     section6.moving_traps.append(moving_trap(100, 400, section6.moving_traps[6].x + section6.moving_traps[6].width + 200, section6.stable_grounds[12].y - 400))
     section6.moving_traps[7].set_rangey(section6.stable_grounds[12].y - 250, section6.stable_grounds[12].y + 400)
-    section6.moving_traps[7].setColor(BLACK)
 
     # Items
     section6.items.append(interactive_object(20, 20, section6.stable_grounds[2].x - 100, section6.stable_grounds[6].y - 150))
@@ -1213,11 +1282,10 @@ def section6_init():
     section6.items.append(interactive_object(20, 20, section6.stable_grounds[12].x + 1000, section6.stable_grounds[12].y - 30))
     section6.items[1].setColor((255, 255, 0))
 
-    section6.items.append(interactive_object(20, 20, section6.stable_grounds[11].x + 50, section6.stable_grounds[11].y - 30))
-    section6.items[2].setColor((255, 255, 0))
+    flowers[2].setPos(-10000, -10000)
+    flowers[2].surface = pygame.image.load('media/flower.png').convert_alpha()
 
     section6.gates.append(gate(40, 60, section6.stable_grounds[4].x + 50, section6.stable_grounds[4].y - 60))
-    section6.items[0].setColor((255, 255, 0))
 
     # Initiate background image
     global bg
@@ -1252,11 +1320,24 @@ def section6_gameplay():
     global section_boss
     global saving
     global save_count
+    global npc2_talk
+    global big_boss
+    global end_x
+    global boss_fight
+
+    if (npc2_talk == True):
+        flowers[2].interact(pressedKey, Anna)
 
     section_gameplay(section6)
     section6.gates[0].enter_gate(pressedKey, Anna)
 
-    section_boss.boss_attack(Anna)
+    global boss_trigger
+
+    if (boss_trigger.checkcollision(boss_trigger, Anna)):
+        boss_fight = True
+
+
+    big_boss.boss_attack(Anna)
 
     if (section6.gates[0].active == True and scenechange == -1):
         section_area = 6
@@ -1270,10 +1351,18 @@ def section6_gameplay():
         saving = (12, 200, 0)
         scenechange = 0
 
+    screen.blit(flowers[2].getSurface(), flowers[2].getPos())
+    screen.blit(big_boss.getSurface(), big_boss.getPos())
+    screen.blit(boss_trigger.getSurface(), boss_trigger.getPos())
+
+    for i in range(len(big_boss.rocks)):
+        screen.blit(big_boss.rocks[i].getSurface(), big_boss.rocks[i].getPos())
+
 
 def section7_init():
     # Initiate the first section
     global section7
+
     section7 = section()
 
     section7.waters.append(water(2*WIDTH, 2*HEIGHT, -WIDTH, 0))
@@ -1312,6 +1401,7 @@ def section7_init():
     global Anna_paint
     Anna_paint = paint_bar(60, 60, 20, 20)
 
+
     # Initiate background image
     global bg
     global bg_pos
@@ -1344,6 +1434,7 @@ def section7_gameplay():
     global section_area
     global save_count
     global saving
+    global big_boss
 
     section_gameplay(section7)
 
@@ -1421,6 +1512,8 @@ def section8_init():
 def section8_gameplay():
     global  scenechange
     global section_area
+    global big_boss
+
     section_gameplay(section8)
 
     if (Anna.x <= -Anna.width and scenechange == -1):

@@ -66,6 +66,7 @@ class interactive_object(sprite):
         self.height = height
         self.dim = (self.width, self.height)
         self.typ = random.randrange(3)
+        self.collect = False
         self.surface = pygame.Surface(self.dim, pygame.SRCALPHA, 32)
         self.surface.fill(self.color)
 
@@ -74,6 +75,13 @@ class interactive_object(sprite):
         if (abs(player.x - self.x) <= 150):
             if (pressedKey[pygame.K_e]):
                 self.setPos(-10000, -10000)
+                self.collect = True
+
+    def move_x(self, dist):
+        self.setPos(self.x + dist, self.y)
+
+    def move_y(self, dist):
+        self.setPos(self.x, self.y + dist)
 
 class image(sprite):
     def __init__(self, fileName, x=0, y=0, width=0, height=0):

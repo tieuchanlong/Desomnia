@@ -30,20 +30,27 @@ class player(sprite):
         self.hp_bars = []
         self.bounce = False
         self.bounce_count = 0
+        self.idl_imagecounter = -1
+        self.walk_imagecounter = -1
+        self.jump_imagecounter = -1
 
     def playerMove(self, pressedKey, spd):
         if (self.bounce == False):
             if (pressedKey[pygame.K_a]):
                 self.x -= spd
                 self.dir = -1
-            if (pressedKey[pygame.K_d]):
+                self.player_walk_anim()
+            elif (pressedKey[pygame.K_d]):
                 self.x += spd
                 self.dir = 1
+                self.player_walk_anim()
+            else:
+                self.player_idle_anim()
         else:
-            self.x += 20*self.dir
-            self.bounce_count += 20
+            self.x += 10*self.dir
+            self.bounce_count += 10
 
-        if (self.jump + self.yspd >= 0 and self.bounce_count > 200):
+        if (self.jump + self.yspd >= 0 and self.bounce_count > 100):
             self.bounce = False
             self.bounce_count = 0
 
@@ -164,7 +171,6 @@ class player(sprite):
         for i in range(len(items)):
             items[i].interact(pressedKey, self)
 
-
     def player_attack(self, pressedKey, section):
         self.end_attack = pygame.time.get_ticks()
         if (pressedKey[pygame.K_r]):
@@ -195,6 +201,69 @@ class player(sprite):
             self.hp_bars[self.hp - 1].setColor((0, 0, 0))
             self.hp -=1
 
+    def player_idle_anim(self):
+        self.idl_imagecounter += 1
+        self.walk_imagecounter = -1
+        self.jump_imagecounter = -1
+
+        if self.idl_imagecounter >= 20:
+            self.idl_imagecounter = 0
+
+        self.surface = pygame.image.load('media/anna_idle_0' + str(int(self.idl_imagecounter / 10)) + '.png').convert_alpha()
+        if (self.dir == 1):
+            self.surface = pygame.transform.flip(self.surface, 0, 0)
+        else:
+            self.surface = pygame.transform.flip(self.surface, 1, 0)
+
+    def player_walk_anim(self):
+        self.walk_imagecounter += 1
+        self.idl_imagecounter = -1
+        self.jump_imagecounter = -1
+
+        if self.walk_imagecounter >= 20:
+            self.walk_imagecounter = 0
+
+        self.surface = pygame.image.load('media/anna_walk_0' + str(int(self.walk_imagecounter / 10)) + '.png').convert_alpha()
+        if (self.dir == 1):
+            self.surface = pygame.transform.flip(self.surface, 0, 0)
+        else:
+            self.surface = pygame.transform.flip(self.surface, 1, 0)
+
+    def player_jump_anim(self):
+        self.jump_imagecounter += 1
+        self.walk_imagecounter = -1
+        self.idl_imagecounter = -1
+
+        if self.jump_imagecounter >= 30:
+            self.jump_imagecounter = 0
+
+        self.surface = pygame.image.load('media/anna_jump_0' + str(int(self.jump_imagecounter / 10)) + '.png').convert_alpha()
+        if (self.dir == 1):
+            self.surface = pygame.transform.flip(self.surface, 0, 0)
+        else:
+            self.surface = pygame.transform.flip(self.surface, 1, 0)
+
+    def player_att_anim(self):
+        self.att_imagecounter += 1
+        self.idl_imagecounter = -1
+
+        if self.att_imagecounter >= 30:
+            self.att_imagecounter = 0
+
+        self.surface = pygame.image.load('media/enemy_att_0' + str(int(self.att_imagecounter / 10)) + '.png').convert_alpha()
+        if (self.dir == 1):
+            self.surface = pygame.transform.flip(self.surface, 1, 0)
+        else:
+            self.surface = pygame.transform.flip(self.surface, 0, 0)
+
+    def player_die_anim(self):
+        self.imagecounter += 1
+        if self.imagecounter >= 40:
+            self.imagecounter = 0
+
+        self.surface = pygame.image.load('media/enemy_die_0' + str(int(self.imagecounter / 10)) + '.png').convert_alpha()
+
+
 
 class enemy(sprite):
     def __init__(self, width, height, x=0, y=0):
@@ -204,16 +273,18 @@ class enemy(sprite):
         self.dim = (self.width, self.height)
         self.typ = random.randrange(3)
         self.surface = pygame.Surface(self.dim, pygame.SRCALPHA, 32)
-        #self.surface = pygame.image.load(filename).convert_alpha()
+        self.surface = pygame.image.load('media/enemy_idle_00.png').convert_alpha()
         self.xspd = 5
         self.yspd = 10
         self.hp = 5
-        self.hit_dist = 0 # hit dist is the distance flew after being hit
-        self.rad_vision = 100 # the range of vision for enemy
+        self.hit_dist = 0  # hit dist is the distance flew after being hit
+        self.rad_vision = 100  # the range of vision for enemy
         self.attack = False
         self.stun = False
         self.move_range = (self.x - 200, self.x + 200)
         self.bounce = False
+        self.att_imagecounter = -1
+        self.idl_imagecounter = -1
 
 
     def setScale(self, width, height):
@@ -236,6 +307,7 @@ class enemy(sprite):
         self.move_range = (l, r)
 
     def enemy_move(self, grounds): # try to detect player
+        self.enemy_idle_anim()
         if (self.stun == False and self.bounce == False):
             self.x += self.xspd/2 * self.dir
 
@@ -306,6 +378,7 @@ class enemy(sprite):
 
     def enemy_attack(self, player, grounds):
         # do some attack movements
+        self.enemy_att_anim()
 
         if (self.checkcollision(self, player)):
             player.jump = -15
@@ -319,6 +392,39 @@ class enemy(sprite):
                 player.dir = 1
             else:
                 player.dir = -1
+
+    def enemy_idle_anim(self):
+        self.idl_imagecounter += 1
+        self.att_imagecounter = -1
+
+        if self.idl_imagecounter >= 20:
+            self.idl_imagecounter = 0
+
+        self.surface = pygame.image.load('media/enemy_idle_0' + str(int(self.idl_imagecounter / 10)) + '.png').convert_alpha()
+        if (self.dir == 1):
+            self.surface = pygame.transform.flip(self.surface, 1, 0)
+        else:
+            self.surface = pygame.transform.flip(self.surface, 0, 0)
+
+    def enemy_att_anim(self):
+        self.att_imagecounter += 1
+        self.idl_imagecounter = -1
+
+        if self.att_imagecounter >= 30:
+            self.att_imagecounter = 0
+
+        self.surface = pygame.image.load('media/enemy_att_0' + str(int(self.att_imagecounter / 10)) + '.png').convert_alpha()
+        if (self.dir == 1):
+            self.surface = pygame.transform.flip(self.surface, 1, 0)
+        else:
+            self.surface = pygame.transform.flip(self.surface, 0, 0)
+
+    def enemy_die_anim(self):
+        self.imagecounter += 1
+        if self.imagecounter >= 40:
+            self.imagecounter = 0
+
+        self.surface = pygame.image.load('media/enemy_die_0' + str(int(self.imagecounter / 10)) + '.png').convert_alpha()
 
 
 class jumping_enemy(enemy):
@@ -456,35 +562,54 @@ class boss(enemy):
         self.end_attack = 0
         self.dir = 1
         self.xspd = 20
-        self.hp = 100
+        self.hp = 50
+        self.move_range = (self.x, self.x + WIDTH - 100)
+        self.rocks = []
+
+    def move_x(self, dist):
+        self.setPos(self.x + dist, self.y)
+        self.move_range = (self.move_range[0] + dist, self.move_range[1] + dist)
+
+    def move_y(self, dist):
+        self.setPos(self.x, self.y + dist)
 
     def boss_attack(self, player):
         self.end_attack = pygame.time.get_ticks()
 
+        for i in range(len(self.rocks)):
+            self.rocks[i].rock_move(player)
+
         if (self.end_attack - self.start_attack >= 10000):
-            self.attack_typ = (self.attack_typ + 1) % 3
+            if (self.attack_typ == 0):
+                for i in range(10):
+                    self.rocks.append(rock(50, 50, self))
+
+            self.attack_typ = (self.attack_typ + 1) % 2
+            self.start_attack = pygame.time.get_ticks()
 
         if (self.attack_typ == 0):
             self.x += self.dir * self.xspd
 
-            if (self.x < 0):
+            if (self.x < self.move_range[0]):
                 self.dir = 1
-                self.x = 0
+                self.x = self.move_range[0]
 
-            if (self.x > WIDTH - self.width):
+            if (self.x > self.move_range[1]):
                 self.dir = -1
-                self.x = WIDTH - self.width
-                WIDTH - self.width
+                self.x = self.move_range[1]
 
         if (self.attack_typ == 1):
             # load some animation
-            self.x = self.x
+            print(self.rocks[0].y)
 
-        if (self.attack_typ == 2):
-            # load some animation
             self.x = self.x
 
         self.pos = (self.x, self.y)
+
+    def boss_die(self, flower):
+        if (self.hp == 0):
+            # Load death animation
+            flower.setPos(self.x + 100, self.y + self.height - flower.height)
 
 
 class npc(sprite):
@@ -495,20 +620,29 @@ class npc(sprite):
         self.dim = (self.width, self.height)
         self.typ = random.randrange(3)
         self.surface = pygame.Surface(self.dim, pygame.SRCALPHA, 32)
-        self.red = 0
-        self.green = 255
-        self.blue = 0
-        self.color = (self.red, self.green, self.blue)
-        self.surface.fill(self.color)
+        self.surface = pygame.image.load('media/npc_idle_00.png').convert_alpha()
         self.xspd = 5
         self.yspd = 10
         self.talk = False
         self.rad_vision = 20 # the range of vision for enemy
+        self.imagecounter = -1
 
     def npc_talk(self, pressedKey, player):
         if (abs(player.x - self.x) <= 150):
             if (pressedKey[pygame.K_e]):
                 self.talk = True
+
+    def npc_idle(self):
+        print(self.imagecounter)
+        self.imagecounter += 1
+        if self.imagecounter >= 30:
+            self.imagecounter = 0
+
+        self.surface = pygame.image.load('media/npc_idle_0' + str(int(self.imagecounter/10)) + '.png').convert_alpha()
+        if (self.dir == 1):
+            self.surface = pygame.transform.flip(self.surface, 1, 0)
+        else:
+            self.surface = pygame.transform.flip(self.surface, 0, 0)
 
 class moving_npc(npc):
     def __init__(self, width, height, x=0, y=0, spd=1):
@@ -524,6 +658,8 @@ class moving_npc(npc):
 
         if (self.x > self.move_range[1] - self.width):
             self.dir = -self.dir
+
+        self.npc_idle()
 
         self.pos = (self.x , self.y)
 

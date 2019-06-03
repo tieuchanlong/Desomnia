@@ -74,6 +74,7 @@ class npc(sprite):
 
         self.surface = pygame.image.load('media/npc_idle_0' + str(int(self.imagecounter/10)) + '.png').convert_alpha()
 
+
 running = True
 
 npc00 = npc(200, 200, 300, 300)

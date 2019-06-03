@@ -6,6 +6,7 @@ class save_point(interactive_object):
         self.area = ar
         self.org_x = x
         self.org_y = y
+        self.imagecounter = -1
 
     def save_game(self, pressedKey, player, section):
         # save game
@@ -16,10 +17,32 @@ class save_point(interactive_object):
 
         return 0, (-10, 0, 0)
 
+    def save_anim(self):
+        self.imagecounter += 1
+
+        if self.imagecounter >= 12:
+            self.imagecounter = 0
+
+        self.surface = pygame.image.load('media/fireplace_0' + str(int(self.imagecounter / 2)) + '.png').convert_alpha()
+
+class instruction_point(interactive_object):
+    def __init__(self, width, height, x=0, y=0, ar=0):
+        interactive_object.__init__(self, width, height, x, y)
+        self.area = ar
+        self.surface = pygame.image.load('media/board.png').convert_alpha()
+
+    def interact(self, pressedKey, player):
+        # Add some interaction
+        if (abs(player.x - self.x) <= 150):
+            if (pressedKey[pygame.K_e]):
+                # Add instructions
+                return
+
 class control_panel(interactive_object):
     def __init__(self, width, height, x=0, y=0):
         interactive_object.__init__(self, width, height, x, y)
         self.active = False
+
 
     def interact(self, pressedKey, player):
         if (abs(player.x - self.x) <= 150):
@@ -31,14 +54,15 @@ class drawing_piece(interactive_object):
     def __init__(self, width, height, x=0, y=0):
         interactive_object.__init__(self, width, height, x, y)
 
-    def interact(self, player):
-        # save game
-        return
+    def interact(self, pressedKey, player):
+        if (self.checkcollision(self, player)):
+            self.setPos(-10000, -10000)
 
 class gate(interactive_object):
     def __init__(self, width, height, x=0, y=0):
         interactive_object.__init__(self, width, height, x, y)
         self.active = False
+        self.surface = pygame.image.load('media/door.png').convert_alpha()
 
     def enter_gate(self, pressedKey, player):
         # save game
@@ -133,7 +157,7 @@ class brush(sprite):
                     enemies[i].dir = -1
 
 class throw_stuff(sprite):
-    def __init__(self, typ = 0, direction = 0):  # add frames input
+    def __init__(self, typ = 0, direction = 1):  # add frames input
         sprite.__init__(self, 0, 0)
         self.xspd = 10
         self.yspd = -10
@@ -144,19 +168,32 @@ class throw_stuff(sprite):
         if (self.typ < 2):
             self.width = 10
             self.height = 10
+            self.yspd = 0
         else:
             self.width = 25
             self.height = 15
 
         self.dim = (self.width, self.height)
         self.surface = pygame.Surface(self.dim, pygame.SRCALPHA, 32)
+        self.imagecounter = -1
+
+        '''if (self.typ < 2):
+            self.surface = pygame.image.load('media/orb.png').convert_alpha()
+        else:
+            self.surface = pygame.image.load('media/cat.png').convert_alpha()
+            if (self.dir == 1):
+                self.surface = pygame.transform.flip(self.surface, 1, 0)
+            else:
+                self.surface = pygame.transform.flip(self.surface, 1, 0)'''
+
         self.red = 0
         self.green = 0
         self.blue = 0
         self.color = (self.red, self.green, self.blue)
-        self.surface.fill(self.color)
 
-    def stuff_move(self, enemies, grounds):
+    def stuff_move(self, enemies, boss, grounds):
+        self.stuff_anim()
+        print(self.dir)
         for i in range(len(grounds)):
             if (self.checkcollision(self, grounds[i]) and self.y <= grounds[i].y):
                 self.xspd = 0
@@ -175,13 +212,34 @@ class throw_stuff(sprite):
                 enemies[i].bounce = True
                 return
 
+        if (self.checkcollision(self, boss)):
+            self.xspd = 0
+            self.yspd = 0
+            self.dir = 0
+            self.setPos(-10000, -10000)
+            boss.hp -= 1
+            return
+
         self.x += self.xspd * self.dir
-        self.y += self.yspd
-        self.yspd += 1
-        if (self.yspd >= 10):
-            self.yspd = 10
+        if (self.typ == 2):
+            self.y += self.yspd
+            self.yspd += 1
+            if (self.yspd >= 10):
+                self.yspd = 10
 
         self.pos = (self.x, self.y)
+
+    def stuff_anim(self):
+        self.imagecounter += 1
+
+        if self.imagecounter >= 8:
+            self.imagecounter = 0
+
+        self.surface = pygame.image.load('media/magic_orb0' + str(int(self.imagecounter/2)) + '.png').convert_alpha()
+        if (self.dir == 1):
+            self.surface = pygame.transform.flip(self.surface, 1, 0)
+        else:
+            self.surface = pygame.transform.flip(self.surface, 0, 0)
 
 
 class bullet(sprite):
@@ -220,9 +278,38 @@ class bullet(sprite):
 
             player.bounce = True
 
-            if (player.x > self.x):
-                player.dir = 1
-            else:
+            if (player.x + player.width/2 > self.x):
                 player.dir = -1
+            else:
+                player.dir = 1
 
         self.pos = (self.x, self.y)
+
+class rock(sprite):
+    def __init__(self, width, height, boss):  # add frames input
+        x = random.randrange(int(boss.move_range[0]), int(boss.move_range[1]) + 100)
+        y = boss.y - random.randrange(HEIGHT, HEIGHT + 200)
+        sprite.__init__(self, x, y)
+        self.width = width
+        self.height = height
+        self.dim = (self.width, self.height)
+        self.yspd = 6
+        self.dir1 = 1
+        self.surface = pygame.Surface(self.dim, pygame.SRCALPHA, 32)
+        self.surface.fill(self.color)
+
+    def move_x(self, dist):
+        self.setPos(self.x + dist, self.y)
+
+    def move_y(self, dist):
+        self.setPos(self.x, self.y + dist)
+
+    def rock_move(self, player):
+        self.y += self.dir1 * self.yspd
+
+        if (self.checkcollision(self, player)):
+            player.dec_hp()
+            self.yspd = 0
+            self.setPos(-10000, -10000)
+
+        self.setPos(self.x, self.y)

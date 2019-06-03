@@ -29,14 +29,14 @@ hostilered = (255, 0, 0)
 
 
 class enemy(sprite):
-    def __init__(self, width, height, x=0, y=0):
+    def __init__(self, filename, width, height, x=0, y=0):
         sprite.__init__(self, x, y)
         self.width = width
         self.height = height
         self.dim = (self.width, self.height)
         self.typ = random.randrange(3)
         self.surface = pygame.Surface(self.dim, pygame.SRCALPHA, 32)
-        # self.surface = pygame.image.load(filename).convert_alpha()
+        self.surface = pygame.image.load(filename).convert_alpha()
         self.xspd = 5
         self.yspd = 10
         self.hp = 5

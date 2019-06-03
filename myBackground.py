@@ -36,16 +36,31 @@ class ground(sprite): # the mid ground for climbing
         self.typ = random.randrange(3)
         self.surface = pygame.Surface(self.dim, pygame.SRCALPHA, 32)
         self.setColor((0, 0, 0))
-        self.surface.fill(self.color)
-        self.images = []
-        self.images.append(image('media/fullgrassground.png', self.x, self.y, self.width, 40))
-        self.images[0].surface = pygame.transform.scale(self.images[0].getSurface(), (self.width + 30, 60))
+        self.surface = pygame.image.load('media/grassground.png').convert_alpha()
+        self.surface = pygame.transform.scale(self.surface, (width, height))
 
         '''i = self.x
         while (i < self.x + self.width):
             self.images.append(image('media/grassground.png', i, self.y, 20, 10))
             if (self.x - self.width - i < 20):
                 self.images.append(image('media/grassground.png', self.x - self.width - 10, self.y, 20, 10))'''
+
+class trigger(sprite): # the mid ground for climbing
+    def __init__(self, width, height, x=0, y=0):  # add frames input
+        sprite.__init__(self, x, y)
+        self.width = width
+        self.height = height
+        self.dim = (self.width, self.height)
+        self.typ = random.randrange(3)
+        self.surface = pygame.Surface(self.dim, pygame.SRCALPHA, 32)
+        self.setColor((0, 0, 0))
+        self.surface.fill(self.color)
+
+    def move_x(self, dist):
+        self.setPos(self.x + dist, self.y)
+
+    def move_y(self, dist):
+        self.setPos(self.x, self.y + dist)
 
 class moving_ground(ground):
     def __init__(self, width, height, x=0, y=0):  # add frames input
@@ -110,8 +125,8 @@ class trap(sprite):
         self.dim = (self.width, self.height)
         self.typ = random.randrange(3)
         self.surface = pygame.Surface(self.dim, pygame.SRCALPHA, 32)
-        self.red = 0
-        self.green = 0
+        self.red = 255
+        self.green = 255
         self.blue = 0
         self.color = (self.red, self.green, self.blue)
         self.surface.fill(self.color)
@@ -167,29 +182,5 @@ class water(sprite):
         self.dim = (self.width, self.height)
         self.typ = random.randrange(3)
         self.surface = pygame.Surface(self.dim, pygame.SRCALPHA, 32)
-        self.surface.fill(self.color)
-
-class rock(sprite):
-    def __init__(self, width, height):  # add frames input
-        x = random.randrange(0, WIDTH - width)
-        y = - random.randrange(height, 100)
-        sprite.__init__(self, x, y)
-        self.width = width
-        self.height = height
-        self.dim = (self.width, self.height)
-        self.yspd = 20
-        self.dir1 = 1
-        self.surface = pygame.Surface(self.dim, pygame.SRCALPHA, 32)
-        self.surface.fill(self.color)
-
-    def rock_move(self, player):
-        self.y += self.dir1 * self.yspd
-
-        if (self.y > HEIGHT):
-            self.yspd = 0
-            self.setPos(-10000, -10000)
-
-        if (self.checkcollision(self, player)):
-            player.hp -= 1
-            self.yspd = 0
-            self.setPos(-10000, -10000)
+        self.surface = pygame.image.load('media/waterbackground02.png').convert_alpha()
+        self.surface = pygame.transform.scale(self.surface, (width, height))

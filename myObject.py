@@ -20,10 +20,11 @@ class save_point(interactive_object):
     def save_anim(self):
         self.imagecounter += 1
 
-        if self.imagecounter >= 12:
+        if self.imagecounter >= 24:
             self.imagecounter = 0
 
-        self.surface = pygame.image.load('media/fireplace_0' + str(int(self.imagecounter / 2)) + '.png').convert_alpha()
+        self.surface = pygame.image.load('media/fireplace_0' + str(int(self.imagecounter / 4)) + '.gif').convert_alpha()
+        self.surface = pygame.transform.scale(self.surface, (self.width, self.height + 70))
 
 class instruction_point(interactive_object):
     def __init__(self, width, height, x=0, y=0, ar=0):
@@ -53,6 +54,8 @@ class control_panel(interactive_object):
 class drawing_piece(interactive_object):
     def __init__(self, width, height, x=0, y=0):
         interactive_object.__init__(self, width, height, x, y)
+        self.surface = pygame.image.load('media/star.png').convert_alpha()
+        self.surface = pygame.transform.scale(self.surface, (30, 30))
 
     def interact(self, pressedKey, player):
         if (self.checkcollision(self, player)):
@@ -210,6 +213,11 @@ class throw_stuff(sprite):
                 self.setPos(-10000, -10000)
                 enemies[i].hp -= 1
                 enemies[i].bounce = True
+                if (self.x + self.width <= enemies[i].x + enemies[i].width/2):
+                    enemies[i].dir = -1
+                else:
+                    enemies[i].dir = 1
+
                 return
 
         if (self.checkcollision(self, boss)):
@@ -254,7 +262,10 @@ class bullet(sprite):
         self.green = 0
         self.blue = 0
         self.color = (0, 0, 0)
-        self.surface.fill(self.color)
+        self.surface = pygame.image.load('media/fireball.png').convert_alpha()
+        if (self.dir == -1):
+            self.surface = pygame.transform.flip(self.surface, 1, 0)
+        self.surface = pygame.transform.scale(self.surface, (width + 50, height + 50))
         self.xspd = 15
         self.yspd = 10
 

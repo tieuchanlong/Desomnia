@@ -19,7 +19,6 @@ class player(sprite):
         self.dir = 1
         self.fall = False
         self.swim = False
-        self.climb = False
         self.attack = False
         self.attack_typ = -1
         self.start_attack = 0
@@ -135,37 +134,6 @@ class player(sprite):
 
         self.pos = (self.x, self.y)
 
-    def player_climb(self, pressedKey, stairs):
-        for i in range(len(stairs)):
-            if (self.checkcollision(self, stairs[i])):
-                # show the text indeicates climbing
-
-                if (pressedKey[pygame.K_e]):
-                    self.x = stairs[i].x + stairs[i].width/2 - self.width/2
-                    self.pos = (self.x, self.y)
-                    self.climb = True
-                    # Load climb animation
-                    break
-
-        if (self.climb == True):
-            if (pressedKey[pygame.K_e] and self.y + self.height > stairs[i].y + stairs[i].height):
-                # load normal animation
-                self.fall = True
-                self.climb = False
-                return
-
-            if (pressedKey[pygame.K_w]):
-                self.y -= self.yspd/2
-
-            if (pressedKey[pygame.K_s]):
-                self.y += self.yspd/2
-
-
-            '''if self.y > stairs[i].y + stairs[i].height - self.height or self.y < stairs[i].y:
-                self.y = min(self.y, stairs[i].y + stairs[i].height - self.height)
-                self.y = max(self.y, stairs[i].y)'''
-
-        self.pos = (self.x, self.y)
 
     def player_pickup(self, pressedKey, items):
         for i in range(len(items)):
@@ -362,16 +330,34 @@ class enemy(sprite):
                 if (self.x >= self.move_range[0]):
                     self.dir = 1
                 else:
-                    self.dir = 0
+                    self.dir = -1
+
+                check = False
+                for i in range(len(grounds)):
+                    if (self.checkcollision(self, grounds[i])):
+                        check = True
+                        break
+
+                if (check == False):
+                    self.dir = -1
+
             else:
                 if (self.x <= self.move_range[1]):
                     self.dir = -1
                 else:
-                    self.dir = 0
+                    self.dir = 1
+
+                check = False
+                for i in range(len(grounds)):
+                    if (self.checkcollision(self, grounds[i])):
+                        check = True
+                        break
+
+                if (check == False):
+                    self.dir = 1
 
 
             self.x += self.xspd/2 *self.dir
-            #self.move_range = (self.move_range[0] + self.xspd*self.dir, self.move_range[1] + self.xspd*self.dir)
             self.pos = (self.x, self.y)
 
             self.enemy_attack(player, grounds)
@@ -564,6 +550,7 @@ class boss(enemy):
         self.xspd = 20
         self.hp = 50
         self.move_range = (self.x, self.x + WIDTH - 100)
+        self.surface.fill(self.color)
         self.rocks = []
 
     def move_x(self, dist):

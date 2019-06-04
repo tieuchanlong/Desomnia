@@ -71,7 +71,7 @@ boss_fight = False
 for i in range(3):
     flowers.append(interactive_object(20, 20, 0, 0))
 
-section_area = 0
+section_area = 10
 scenechange = -1
 save_count = 0
 saving = (6, 0, 0)
@@ -168,8 +168,6 @@ def section_gameplay(section):
         else:
             startbackground_y = start_y
 
-    Anna.player_climb(pressedKey, section.stairs)
-
     Anna.player_pickup(pressedKey, section.items)
 
     Anna.player_swim(pressedKey, section.waters)
@@ -239,7 +237,7 @@ def section_gameplay(section):
         scenechange = 0
 
 
-
+    section.saving_point.save_anim()
 
     ### --- Blit section --- ###
     for i in range(len(bg)):
@@ -289,9 +287,6 @@ def section_gameplay(section):
 
     for i in range(len(section.bullets)):
         screen.blit(section.bullets[i].getSurface(), section.bullets[i].getPos())
-
-    for i in range(len(section.stairs)):
-        screen.blit(section.stairs[i].getSurface(), section.stairs[i].getPos())
 
     for i in range(len(Anna.hp_bars)):
         screen.blit(Anna.hp_bars[i].getSurface(), Anna.hp_bars[i].getPos())
@@ -354,7 +349,8 @@ def section1_init():
     section1.stable_grounds.append(ground(2100, 1000, 0, section1.stable_grounds[3].y + section1.stable_grounds[3].height))
     section1.stable_grounds.append(ground(500, 260, section1.stable_grounds[2].x + section1.stable_grounds[2].width - 700, section1.stable_grounds[2].y - 260))
     section1.stable_grounds.append(ground(section1.stable_grounds[0].width + 100, section1.stable_grounds[2].height + section1.stable_grounds[3].height + section1.stable_grounds[4].height, section1.stable_grounds[2].x + section1.stable_grounds[2].width + 1000, section1.stable_grounds[3].y))
-    section1.stable_grounds.append(ground(1000, 50, section1.stable_grounds[3].x + section1.stable_grounds[3].width, section1.stable_grounds[3].y))
+    section1.stable_grounds.append(ground(1000, 100, section1.stable_grounds[3].x + section1.stable_grounds[3].width, section1.stable_grounds[3].y))
+    section1.stable_grounds.append(ground(100, 50, section1.stable_grounds[2].x + section1.stable_grounds[2].width + 150, section1.stable_grounds[3].y - 200))
 
     endbackground1_x = section1.stable_grounds[6].x + 500
     endbackground1_y = section1.stable_grounds[6].y
@@ -363,10 +359,6 @@ def section1_init():
     section1.moving_npc[0].set_rangex(section1.stable_grounds[4].x + 300, section1.stable_grounds[4].x + 600)
     section1.moving_npc[0].setColor((255, 0, 0))
 
-
-    section1.stairs.append(stair(40, section1.stable_grounds[5].height + 40, section1.stable_grounds[5].x + section1.stable_grounds[5].width/2, section1.stable_grounds[5].y - 40))
-
-    section1.stairs[0].setColor((0, 255, 0))
 
     section1.items.append(interactive_object(20, 20, section1.stable_grounds[5].x + 50, section1.stable_grounds[5].y - 30))
     section1.items[0].setColor((255, 255, 0))
@@ -427,8 +419,8 @@ def section1_init():
     global startbackground_y
     bg = []
     bg_pos = []
-    bg.append(pygame.image.load('media/forestbackground01.png').convert())
-    bg.append(pygame.image.load('media/forestbackground01.png').convert())
+    bg.append(pygame.image.load('media/forestbackground00.png').convert())
+    bg.append(pygame.image.load('media/forestbackground00.png').convert())
     bg.append(pygame.image.load('media/forestbackground01.png').convert())
     bg.append(pygame.image.load('media/forestbackground01.png').convert())
     bg_pos.append([0, -HEIGHT])
@@ -597,14 +589,19 @@ def section2_init():
     global startbackground_y
     bg = []
     bg_pos = []
-    bg.append(pygame.image.load('media/forestbackground03.png').convert())
-    bg.append(pygame.image.load('media/forestbackground03.png').convert())
-    bg.append(pygame.image.load('media/forestbackground03.png').convert())
-    bg.append(pygame.image.load('media/forestbackground03.png').convert())
+    bg.append(pygame.image.load('media/forestbackground00.png').convert())
+    bg.append(pygame.image.load('media/forestbackground00.png').convert())
+    bg.append(pygame.image.load('media/forestbackground00.png').convert())
+    bg.append(pygame.image.load('media/forestbackground00.png').convert())
+    bg.append(pygame.image.load('media/forestbackground01.png').convert())
+    bg.append(pygame.image.load('media/forestbackground01.png').convert())
+    bg.append(pygame.image.load('media/forestbackground01.png').convert())
+    bg.append(pygame.image.load('media/forestbackground01.png').convert())
     bg_pos.append([section2.stable_grounds[0].x, -HEIGHT])
     bg_pos.append([bg_pos[0][0] + bg[0].get_width(), -HEIGHT])
     bg_pos.append([bg_pos[1][0] + bg[1].get_width(), -HEIGHT])
     bg_pos.append([bg_pos[2][0] + bg[2].get_width(), -HEIGHT])
+
     bg_pos.append([section2.stable_grounds[0].x, bg_pos[0][1] + bg[0].get_height()])
     bg_pos.append([bg_pos[0][0] + bg[0].get_width(), bg_pos[0][1] + bg[0].get_height()])
     bg_pos.append([bg_pos[1][0] + bg[1].get_width(), bg_pos[0][1] + bg[0].get_height()])
@@ -680,20 +677,20 @@ def section3_init(): # Add 1 more trap
     section3.stable_grounds.append(ground(50, 2000, section3.stable_grounds[13].x + section3.stable_grounds[13].width, section3.stable_grounds[13].y - 500))
 
     section3.moving_grounds.append(moving_ground(100, 50, section3.stable_grounds[0].x + section3.stable_grounds[0].width + 200, section3.stable_grounds[0].y - 160))
-    section3.moving_grounds[0].set_rangex(section3.stable_grounds[0].x + section3.stable_grounds[0].width, section3.stable_grounds[1].x)
+    section3.moving_grounds[0].set_rangex(section3.stable_grounds[0].x + section3.stable_grounds[0].width, section3.stable_grounds[1].x + 100)
     section3.moving_grounds[0].set_rangey(section3.moving_grounds[0].y, section3.moving_grounds[0].y)
 
     section3.moving_grounds.append(moving_ground(200, 50, section3.stable_grounds[0].x + section3.stable_grounds[0].width + 200, section3.stable_grounds[0].y - 320))
-    section3.moving_grounds[1].set_rangex(section3.stable_grounds[0].x + section3.stable_grounds[0].width - 100, section3.stable_grounds[1].x)
+    section3.moving_grounds[1].set_rangex(section3.stable_grounds[0].x + section3.stable_grounds[0].width - 100, section3.stable_grounds[1].x + 100)
     section3.moving_grounds[1].set_rangey(section3.moving_grounds[1].y, section3.moving_grounds[1].y)
 
 
     section3.moving_grounds.append(moving_ground(200, 50, section3.stable_grounds[0].x - 400, section3.stable_grounds[0].y - 480))
-    section3.moving_grounds[2].set_rangex(section3.stable_grounds[0].x + section3.stable_grounds[0].width - 200, section3.stable_grounds[1].x)
+    section3.moving_grounds[2].set_rangex(section3.stable_grounds[0].x + section3.stable_grounds[0].width - 200, section3.stable_grounds[1].x + 100)
     section3.moving_grounds[2].set_rangey(section3.moving_grounds[2].y, section3.moving_grounds[2].y)
 
     section3.moving_grounds.append(moving_ground(200, 50, section3.stable_grounds[0].x - 400, section3.stable_grounds[0].y - 640))
-    section3.moving_grounds[3].set_rangex(section3.stable_grounds[0].x + section3.stable_grounds[0].width - 300, section3.stable_grounds[1].x)
+    section3.moving_grounds[3].set_rangex(section3.stable_grounds[0].x + section3.stable_grounds[0].width - 300, section3.stable_grounds[1].x + 100)
     section3.moving_grounds[3].set_rangey(section3.moving_grounds[3].y, section3.moving_grounds[3].y)
 
 
@@ -705,8 +702,11 @@ def section3_init(): # Add 1 more trap
 
 
     # Enemies
+    section3.moving_enemies.append(enemy(30, 30, section3.stable_grounds[0].x + 600, section3.stable_grounds[0].y - 30))
     section3.moving_enemies.append(enemy(30, 30, section3.stable_grounds[11].x, section3.stable_grounds[11].y - 30))
     section3.moving_enemies.append(enemy(30, 30, section3.stable_grounds[11].x + 700, section3.stable_grounds[11].y - 30))
+    section3.moving_enemies.append(enemy(30, 30, section3.stable_grounds[11].x + 1000, section3.stable_grounds[11].y - 30))
+    section3.moving_enemies.append(enemy(30, 30, section3.stable_grounds[11].x + 1300, section3.stable_grounds[11].y - 30))
     section3.moving_enemies.append(enemy(30, 30, section3.stable_grounds[13].x, section3.stable_grounds[13].y - 30))
 
     section3.moving_enemies[0].dir = -1
@@ -774,7 +774,7 @@ def section3_init(): # Add 1 more trap
     section3.traps.append(trap(section3.stable_grounds[6].x - section3.stable_grounds[4].x - section3.stable_grounds[4].width, section3.stable_grounds[6].height, section3.stable_grounds[4].x + section3.stable_grounds[4].width, section3.stable_grounds[6].y))
     section3.traps.append(trap(section3.stable_grounds[7].x - section3.stable_grounds[6].x - section3.stable_grounds[6].width, section3.stable_grounds[7].height, section3.stable_grounds[6].x + section3.stable_grounds[6].width, section3.stable_grounds[7].y))
     section3.traps.append(trap(section3.stable_grounds[8].x - section3.stable_grounds[7].x - section3.stable_grounds[7].width, section3.stable_grounds[8].height, section3.stable_grounds[7].x + section3.stable_grounds[7].width, section3.stable_grounds[8].y))
-
+    section3.traps.append(trap(section3.stable_grounds[12].width, 100,section3.stable_grounds[12].x, section3.stable_grounds[12].y - 100))
 
     # Initiate background image
     global bg
@@ -785,14 +785,19 @@ def section3_init(): # Add 1 more trap
     global startbackground_y
     bg = []
     bg_pos = []
-    bg.append(pygame.image.load('media/mountains.png').convert())
-    bg.append(pygame.image.load('media/mountains.png').convert())
-    bg.append(pygame.image.load('media/mountains.png').convert())
-    bg.append(pygame.image.load('media/mountains.png').convert())
+    bg.append(pygame.image.load('media/forestbackground00.png').convert())
+    bg.append(pygame.image.load('media/forestbackground00.png').convert())
+    bg.append(pygame.image.load('media/forestbackground00.png').convert())
+    bg.append(pygame.image.load('media/forestbackground00.png').convert())
+    bg.append(pygame.image.load('media/forestbackground01.png').convert())
+    bg.append(pygame.image.load('media/forestbackground01.png').convert())
+    bg.append(pygame.image.load('media/forestbackground01.png').convert())
+    bg.append(pygame.image.load('media/forestbackground01.png').convert())
     bg_pos.append([section3.stable_grounds[0].x, -HEIGHT])
     bg_pos.append([bg_pos[0][0] + bg[0].get_width(), -HEIGHT])
     bg_pos.append([bg_pos[1][0] + bg[1].get_width(), -HEIGHT])
     bg_pos.append([bg_pos[2][0] + bg[2].get_width(), -HEIGHT])
+
     bg_pos.append([section3.stable_grounds[0].x, bg_pos[0][1] + bg[0].get_height()])
     bg_pos.append([bg_pos[0][0] + bg[0].get_width(), bg_pos[0][1] + bg[0].get_height()])
     bg_pos.append([bg_pos[1][0] + bg[1].get_width(), bg_pos[0][1] + bg[0].get_height()])
@@ -865,21 +870,12 @@ def section4_init():
     section4.stable_grounds.append(ground(200, 50, 2500, section4.stable_grounds[0].y - 150))
     section4.stable_grounds.append(ground(200, 50, section4.stable_grounds[10].x + section4.stable_grounds[10].width + 100, section4.stable_grounds[10].y - 150))
     section4.stable_grounds.append(ground(200, 50, section4.stable_grounds[11].x + section4.stable_grounds[11].width + 100, section4.stable_grounds[11].y - 150))
+    section4.stable_grounds.append(ground(100, 50, section4.stable_grounds[8].x + section4.stable_grounds[8].width + 200, section4.stable_grounds[8].y + 100))
+    section4.stable_grounds.append(ground(100, 50, section4.stable_grounds[3].x - 300, section4.stable_grounds[3].y))
+    section4.stable_grounds.append(ground(100, 50, section4.stable_grounds[12].x + section4.stable_grounds[12].width + 300, section4.stable_grounds[12].y - 150))
 
-    section4.moving_grounds.append(moving_ground(100, 50, section4.stable_grounds[8].x + section4.stable_grounds[8].width + 200, section4.stable_grounds[8].y))
-    section4.moving_grounds[0].set_rangex(section4.moving_grounds[0].x, section4.moving_grounds[0].x)
-    section4.moving_grounds[0].set_rangey(section4.stable_grounds[0].y - 150, section4.stable_grounds[8].y)
-
-    section4.moving_grounds.append(moving_ground(100, 50, section4.stable_grounds[3].x - 300, section4.stable_grounds[3].y))
-    section4.moving_grounds[1].set_rangex(section4.moving_grounds[1].x, section4.moving_grounds[1].x)
-    section4.moving_grounds[1].set_rangey(section4.stable_grounds[0].y - 150, section4.stable_grounds[3].y)
-
-    section4.moving_grounds.append(moving_ground(100, 50, section4.stable_grounds[12].x + section4.stable_grounds[12].width + 300, section4.stable_grounds[12].y - 150))
-    section4.moving_grounds[2].set_rangex(section4.moving_grounds[2].x, section4.moving_grounds[2].x)
-    section4.moving_grounds[2].set_rangey(section4.stable_grounds[12].y - 150, section4.stable_grounds[12].y - 150)
 
     section4.waters.append(water(WIDTH - section4.stable_grounds[8].width, 1000, section4.stable_grounds[8].x + section4.stable_grounds[8].width, section4.stable_grounds[9].y + 100))
-
     # Set up the boundaries
     global start_x
     global start_y
@@ -939,9 +935,9 @@ def section4_init():
     section4.stable_enemies.append(shooting_enemy(30, 40, section4.stable_grounds[2].x + section4.stable_grounds[2].width + 1800, section4.stable_grounds[0].y - 40))
     section4.stable_enemies.append(shooting_enemy(30, 40, section4.stable_grounds[2].x + section4.stable_grounds[2].width + 2400, section4.stable_grounds[0].y - 40))
     section4.stable_enemies.append(shooting_enemy(30, 40, section4.stable_grounds[2].x + section4.stable_grounds[2].width + 3000,section4.stable_grounds[0].y - 40))
-    section4.stable_enemies.append(shooting_enemy(30, 40, section4.stable_grounds[0].x + 500,section4.stable_grounds[0].y - 40))
+    section4.stable_enemies.append(shooting_enemy(30, 40, section4.stable_grounds[8].x + 100,section4.stable_grounds[8].y - 40))
     section4.stable_enemies.append(shooting_enemy(30, 40, section4.stable_grounds[0].x + 1200,section4.stable_grounds[0].y - 40))
-    section4.stable_enemies.append(shooting_enemy(30, 40, section4.moving_grounds[0].x + section4.moving_grounds[0].width/2 - 15, section4.stable_grounds[0].y - 40))
+    section4.stable_enemies.append(shooting_enemy(30, 40, section4.stable_grounds[14].x + section4.stable_grounds[14].width/2 - 15, section4.stable_grounds[0].y - 40))
     section4.stable_enemies.append(shooting_enemy(30, 40, section4.stable_grounds[3].x + 200, section4.stable_grounds[3].y - 40))
     section4.stable_enemies.append(shooting_enemy(30, 40, section4.stable_grounds[2].x + section4.stable_grounds[2].width + 3600, section4.stable_grounds[0].y - 40))
     section4.stable_enemies.append(shooting_enemy(30, 40, section4.stable_grounds[2].x + section4.stable_grounds[2].width + 4200,section4.stable_grounds[0].y - 40))
@@ -956,9 +952,11 @@ def section4_init():
     section4.npc.append(npc(70, 70, section4.stable_grounds[0].x + section4.stable_grounds[0].width - 200, section4.stable_grounds[0].y - 70))
 
     # Items
+    section4.items.append(drawing_piece(20, 20, section4.stable_grounds[12].x + 100, section4.stable_grounds[12].y - 40))
+
     section4.gates.append(gate(50, 60, section4.stable_grounds[2].x + 50, section4.stable_grounds[2].y - 60))
 
-    section4.gates.append(gate(50, 60, section4.moving_grounds[2].x + 50, section4.moving_grounds[2].y - 60))
+    section4.gates.append(gate(50, 60, section4.stable_grounds[15].x + 50, section4.stable_grounds[15].y - 60))
 
     section4.gates.append(gate(50, 60, section4.stable_grounds[3].x + 50, section4.stable_grounds[3].y - 60))
 
@@ -971,15 +969,20 @@ def section4_init():
     global startbackground_y
     bg = []
     bg_pos = []
-    bg.append(pygame.image.load('media/mountains.png').convert())
-    bg.append(pygame.image.load('media/mountains.png').convert())
-    bg.append(pygame.image.load('media/mountains.png').convert())
-    bg.append(pygame.image.load('media/mountains.png').convert())
-    bg_pos.append([section4.stable_grounds[7].x - 100, -HEIGHT])
+    bg.append(pygame.image.load('media/forestbackground00.png').convert())
+    bg.append(pygame.image.load('media/forestbackground00.png').convert())
+    bg.append(pygame.image.load('media/forestbackground00.png').convert())
+    bg.append(pygame.image.load('media/forestbackground00.png').convert())
+    bg.append(pygame.image.load('media/forestbackground01.png').convert())
+    bg.append(pygame.image.load('media/forestbackground01.png').convert())
+    bg.append(pygame.image.load('media/forestbackground01.png').convert())
+    bg.append(pygame.image.load('media/forestbackground01.png').convert())
+    bg_pos.append([section4.stable_grounds[0].x, -HEIGHT])
     bg_pos.append([bg_pos[0][0] + bg[0].get_width(), -HEIGHT])
     bg_pos.append([bg_pos[1][0] + bg[1].get_width(), -HEIGHT])
     bg_pos.append([bg_pos[2][0] + bg[2].get_width(), -HEIGHT])
-    bg_pos.append([section4.stable_grounds[7].x - 100, bg_pos[0][1] + bg[0].get_height()])
+
+    bg_pos.append([section4.stable_grounds[0].x, bg_pos[0][1] + bg[0].get_height()])
     bg_pos.append([bg_pos[0][0] + bg[0].get_width(), bg_pos[0][1] + bg[0].get_height()])
     bg_pos.append([bg_pos[1][0] + bg[1].get_width(), bg_pos[0][1] + bg[0].get_height()])
     bg_pos.append([bg_pos[2][0] + bg[2].get_width(), bg_pos[0][1] + bg[0].get_height()])
@@ -1039,7 +1042,7 @@ def section4_gameplay():
     if (section4.gates[2].active == True and scenechange == -1):
         section_area = 10
         save_count += 1
-        saving = (10, 700, HEIGHT - 200)
+        saving = (10, 2500, HEIGHT - 300)
         scenechange = 0
 
     if (Anna.x >= WIDTH and scenechange == -1):
@@ -1114,9 +1117,12 @@ def section5_init():
     for i in range(len(section5.stable_enemies)):
         section5.stable_enemies[i].setColor((255, 0, 0))
 
-    section5.waters.append(water(section5.stable_grounds[0].x - section5.stable_grounds[7].x - section5.stable_grounds[7].width, 1000, section5.stable_grounds[7].x + section5.stable_grounds[7].width, section5.stable_grounds[7].y + 200))
+    section5.waters.append(water(section5.stable_grounds[0].x - section5.stable_grounds[7].x - section5.stable_grounds[7].width, 500, section5.stable_grounds[7].x + section5.stable_grounds[7].width, section5.stable_grounds[7].y + 200))
 
     # Items
+    section5.items.append(drawing_piece(20, 20, section5.stable_grounds[6].x + 50, section5.stable_grounds[6].y - 40))
+    section5.items.append(drawing_piece(20, 20, section5.stable_grounds[7].x + 50, section5.stable_grounds[7].y - 40))
+
     flowers[0].setPos(section5.stable_grounds[7].x + 50, section5.stable_grounds[7].y - 30)
     flowers[0].surface = pygame.image.load('media/flower.png').convert_alpha()
 
@@ -1134,15 +1140,20 @@ def section5_init():
     global startbackground_y
     bg = []
     bg_pos = []
-    bg.append(pygame.image.load('media/mountains.png').convert())
-    bg.append(pygame.image.load('media/mountains.png').convert())
-    bg.append(pygame.image.load('media/mountains.png').convert())
-    bg.append(pygame.image.load('media/mountains.png').convert())
-    bg_pos.append([section5.stable_grounds[7].x, -HEIGHT])
+    bg.append(pygame.image.load('media/forestbackground00.png').convert())
+    bg.append(pygame.image.load('media/forestbackground00.png').convert())
+    bg.append(pygame.image.load('media/forestbackground00.png').convert())
+    bg.append(pygame.image.load('media/forestbackground00.png').convert())
+    bg.append(pygame.image.load('media/forestbackground01.png').convert())
+    bg.append(pygame.image.load('media/forestbackground01.png').convert())
+    bg.append(pygame.image.load('media/forestbackground01.png').convert())
+    bg.append(pygame.image.load('media/forestbackground01.png').convert())
+    bg_pos.append([section5.stable_grounds[0].x, -HEIGHT])
     bg_pos.append([bg_pos[0][0] + bg[0].get_width(), -HEIGHT])
     bg_pos.append([bg_pos[1][0] + bg[1].get_width(), -HEIGHT])
     bg_pos.append([bg_pos[2][0] + bg[2].get_width(), -HEIGHT])
-    bg_pos.append([section5.stable_grounds[7].x, bg_pos[0][1] + bg[0].get_height()])
+
+    bg_pos.append([section5.stable_grounds[0].x, bg_pos[0][1] + bg[0].get_height()])
     bg_pos.append([bg_pos[0][0] + bg[0].get_width(), bg_pos[0][1] + bg[0].get_height()])
     bg_pos.append([bg_pos[1][0] + bg[1].get_width(), bg_pos[0][1] + bg[0].get_height()])
     bg_pos.append([bg_pos[2][0] + bg[2].get_width(), bg_pos[0][1] + bg[0].get_height()])
@@ -1276,7 +1287,7 @@ def section6_init():
     section6.moving_traps[7].set_rangey(section6.stable_grounds[12].y - 250, section6.stable_grounds[12].y + 400)
 
     # Items
-    section6.items.append(interactive_object(20, 20, section6.stable_grounds[2].x - 100, section6.stable_grounds[6].y - 150))
+    section6.items.append(drawing_piece(20, 20, section6.stable_grounds[2].x - 100, section6.stable_grounds[6].y - 150))
     section6.items[0].setColor((255, 255, 0))
 
     section6.items.append(interactive_object(20, 20, section6.stable_grounds[12].x + 1000, section6.stable_grounds[12].y - 30))
@@ -1296,15 +1307,20 @@ def section6_init():
     global startbackground_y
     bg = []
     bg_pos = []
-    bg.append(pygame.image.load('media/mountains.png').convert())
-    bg.append(pygame.image.load('media/mountains.png').convert())
-    bg.append(pygame.image.load('media/mountains.png').convert())
-    bg.append(pygame.image.load('media/mountains.png').convert())
-    bg_pos.append([section6.stable_grounds[11].x, -HEIGHT])
+    bg.append(pygame.image.load('media/forestbackground00.png').convert())
+    bg.append(pygame.image.load('media/forestbackground00.png').convert())
+    bg.append(pygame.image.load('media/forestbackground00.png').convert())
+    bg.append(pygame.image.load('media/forestbackground00.png').convert())
+    bg.append(pygame.image.load('media/forestbackground01.png').convert())
+    bg.append(pygame.image.load('media/forestbackground01.png').convert())
+    bg.append(pygame.image.load('media/forestbackground01.png').convert())
+    bg.append(pygame.image.load('media/forestbackground01.png').convert())
+    bg_pos.append([section6.stable_grounds[0].x, -HEIGHT])
     bg_pos.append([bg_pos[0][0] + bg[0].get_width(), -HEIGHT])
     bg_pos.append([bg_pos[1][0] + bg[1].get_width(), -HEIGHT])
     bg_pos.append([bg_pos[2][0] + bg[2].get_width(), -HEIGHT])
-    bg_pos.append([section6.stable_grounds[11].x, bg_pos[0][1] + bg[0].get_height()])
+
+    bg_pos.append([section6.stable_grounds[0].x, bg_pos[0][1] + bg[0].get_height()])
     bg_pos.append([bg_pos[0][0] + bg[0].get_width(), bg_pos[0][1] + bg[0].get_height()])
     bg_pos.append([bg_pos[1][0] + bg[1].get_width(), bg_pos[0][1] + bg[0].get_height()])
     bg_pos.append([bg_pos[2][0] + bg[2].get_width(), bg_pos[0][1] + bg[0].get_height()])
@@ -1366,6 +1382,37 @@ def section7_init():
     section7 = section()
 
     section7.waters.append(water(2*WIDTH, 2*HEIGHT, -WIDTH, 0))
+    section7.waters.append(water(2 * WIDTH, 2 * HEIGHT, section7.waters[0].x + section7.waters[0].width, 0))
+
+    section7.items.append(drawing_piece(20, 20, section7.waters[0].x + 100, section7.waters[0].y + 1000))
+
+    # Traps
+    section7.moving_traps.append(moving_trap(100, 2000, section7.waters[0].x + 200, section7.waters[0].y + 200))
+    section7.moving_traps[0].set_rangey(section7.waters[0].y + 300, section7.waters[0].y + 500)
+
+    section7.moving_traps.append(moving_trap(100, 2000, section7.moving_traps[0].x + section7.moving_traps[0].width + 300, section7.waters[0].y + 200))
+    section7.moving_traps[1].set_rangey(section7.waters[0].y + 300, section7.waters[0].y + 500)
+
+    section7.moving_traps.append(moving_trap(100, 2000, section7.moving_traps[1].x + section7.moving_traps[1].width + 300, section7.waters[0].y + 200))
+    section7.moving_traps[2].set_rangey(section7.waters[0].y + 300, section7.waters[0].y + 500)
+
+    section7.moving_traps.append(moving_trap(100, 2000, section7.moving_traps[2].x + section7.moving_traps[2].width + 300, section7.waters[0].y + 200))
+    section7.moving_traps[3].set_rangey(section7.waters[0].y + 300, section7.waters[0].y + 500)
+
+    section7.moving_traps.append(moving_trap(100, 2000, section7.moving_traps[3].x + section7.moving_traps[3].width + 300, section7.waters[0].y + 200))
+    section7.moving_traps[4].set_rangey(section7.waters[0].y + 300, section7.waters[0].y + 500)
+
+    section7.moving_traps.append(moving_trap(100, 2000, section7.moving_traps[4].x + section7.moving_traps[4].width + 300, section7.waters[0].y + 200))
+    section7.moving_traps[5].set_rangey(section7.waters[0].y + 300, section7.waters[0].y + 500)
+
+    section7.moving_traps.append(moving_trap(100, 2000, section7.moving_traps[5].x + section7.moving_traps[5].width + 300, section7.waters[0].y + 200))
+    section7.moving_traps[6].set_rangey(section7.waters[0].y + 100, section7.waters[0].y + 500)
+
+    section7.moving_traps.append(moving_trap(100, 2000, section7.moving_traps[6].x + section7.moving_traps[6].width + 300, section7.waters[0].y + 200))
+    section7.moving_traps[7].set_rangey(section7.waters[0].y + 200, section7.waters[0].y + 500)
+
+    section7.moving_traps.append(moving_trap(100, 2000, section7.moving_traps[7].x + section7.moving_traps[7].width + 300, section7.waters[0].y + 200))
+    section7.moving_traps[8].set_rangey(section7.waters[0].y + 50, section7.waters[0].y + 500)
 
     # Set up the boundaries
     global start_x
@@ -1411,14 +1458,19 @@ def section7_init():
     global startbackground_y
     bg = []
     bg_pos = []
-    bg.append(pygame.image.load('media/mountains.png').convert())
-    bg.append(pygame.image.load('media/mountains.png').convert())
-    bg.append(pygame.image.load('media/mountains.png').convert())
-    bg.append(pygame.image.load('media/mountains.png').convert())
+    bg.append(pygame.image.load('media/forestbackground00.png').convert())
+    bg.append(pygame.image.load('media/forestbackground00.png').convert())
+    bg.append(pygame.image.load('media/forestbackground00.png').convert())
+    bg.append(pygame.image.load('media/forestbackground00.png').convert())
+    bg.append(pygame.image.load('media/forestbackground01.png').convert())
+    bg.append(pygame.image.load('media/forestbackground01.png').convert())
+    bg.append(pygame.image.load('media/forestbackground01.png').convert())
+    bg.append(pygame.image.load('media/forestbackground01.png').convert())
     bg_pos.append([section7.waters[0].x, -HEIGHT])
     bg_pos.append([bg_pos[0][0] + bg[0].get_width(), -HEIGHT])
     bg_pos.append([bg_pos[1][0] + bg[1].get_width(), -HEIGHT])
     bg_pos.append([bg_pos[2][0] + bg[2].get_width(), -HEIGHT])
+
     bg_pos.append([section7.waters[0].x, bg_pos[0][1] + bg[0].get_height()])
     bg_pos.append([bg_pos[0][0] + bg[0].get_width(), bg_pos[0][1] + bg[0].get_height()])
     bg_pos.append([bg_pos[1][0] + bg[1].get_width(), bg_pos[0][1] + bg[0].get_height()])
@@ -1495,13 +1547,22 @@ def section8_init():
     global startbackground_y
     bg = []
     bg_pos = []
-    bg.append(pygame.image.load('media/mountains.png').convert())
-    bg.append(pygame.image.load('media/mountains.png').convert())
-    bg.append(pygame.image.load('media/mountains.png').convert())
-    bg.append(pygame.image.load('media/mountains.png').convert())
-    bg_pos.append([0, -HEIGHT])
+    bg.append(pygame.image.load('media/forestbackground00.png').convert())
+    bg.append(pygame.image.load('media/forestbackground00.png').convert())
+    bg.append(pygame.image.load('media/forestbackground00.png').convert())
+    bg.append(pygame.image.load('media/forestbackground00.png').convert())
+    bg.append(pygame.image.load('media/forestbackground01.png').convert())
+    bg.append(pygame.image.load('media/forestbackground01.png').convert())
+    bg.append(pygame.image.load('media/forestbackground01.png').convert())
+    bg.append(pygame.image.load('media/forestbackground01.png').convert())
+    bg_pos.append([section8.stable_grounds[0].x, -HEIGHT])
     bg_pos.append([bg_pos[0][0] + bg[0].get_width(), -HEIGHT])
-    bg_pos.append([0, bg_pos[0][1] + bg[0].get_height()])
+    bg_pos.append([bg_pos[1][0] + bg[1].get_width(), -HEIGHT])
+    bg_pos.append([bg_pos[2][0] + bg[2].get_width(), -HEIGHT])
+
+    bg_pos.append([section8.stable_grounds[0].x, bg_pos[0][1] + bg[0].get_height()])
+    bg_pos.append([bg_pos[0][0] + bg[0].get_width(), bg_pos[0][1] + bg[0].get_height()])
+    bg_pos.append([bg_pos[1][0] + bg[1].get_width(), bg_pos[0][1] + bg[0].get_height()])
     bg_pos.append([bg_pos[2][0] + bg[2].get_width(), bg_pos[0][1] + bg[0].get_height()])
     startscrolling_x = WIDTH / 2
     startscrolling_y = HEIGHT / 2

@@ -133,7 +133,7 @@ class trap(sprite):
 
     def trap_attack(self, player):
         if (self.checkcollision(self, player)):
-            player.dec_hp()
+            player.hp = 0
             player.jump = -15
             player.bounce = True
 
@@ -163,7 +163,7 @@ class moving_trap(trap):
             self.dir1 = -1
 
         if (self.checkcollision(self, player)):
-            player.dec_hp()
+            player.hp = 0
             player.jump = -15
             player.bounce = True
 

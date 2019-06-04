@@ -7,7 +7,6 @@ class section:
         self.stable_grounds = []
         self.moving_grounds = []
         self.waters = []
-        self.stairs = []
         self.items = []
         self.npc = []
         self.moving_npc = []
@@ -34,9 +33,6 @@ class section:
         for i in range(len(self.stable_grounds)):
             self.stable_grounds[i].setPos(self.stable_grounds[i].x + distance, self.stable_grounds[i].y)
 
-
-        for i in range(len(self.stairs)):
-            self.stairs[i].setPos(self.stairs[i].x + distance, self.stairs[i].y)
 
         for i in range(len(self.items)):
             self.items[i].setPos(self.items[i].x + distance, self.items[i].y)
@@ -87,10 +83,6 @@ class section:
 
         for i in range(len(self.stable_grounds)):
             self.stable_grounds[i].setPos(self.stable_grounds[i].x, self.stable_grounds[i].y + distance)
-
-
-        for i in range(len(self.stairs)):
-            self.stairs[i].setPos(self.stairs[i].x, self.stairs[i].y + distance)
 
         for i in range(len(self.items)):
             self.items[i].setPos(self.items[i].x, self.items[i].y + distance)

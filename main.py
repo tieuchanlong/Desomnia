@@ -71,7 +71,7 @@ boss_fight = False
 for i in range(3):
     flowers.append(interactive_object(20, 20, 0, 0))
 
-section_area = 10
+section_area = 0
 scenechange = -1
 save_count = 0
 saving = (6, 0, 0)

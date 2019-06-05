@@ -5,7 +5,6 @@
 
 '''
 
-import pygame
 from myCharacter import *
 from myBackground import *
 from mySection import *

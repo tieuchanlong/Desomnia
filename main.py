@@ -107,6 +107,7 @@ def section_gameplay(section):
     global boss_trigger
     global section_area
     global scenechange
+    global Anna_paint
 
     if (Anna.x + Anna.width / 2 > startscrolling_x):
         startbackground_x += Anna.x + Anna.width / 2 - startscrolling_x
@@ -183,6 +184,7 @@ def section_gameplay(section):
 
     # moving enemies
     for i in range(len(section.moving_enemies)):
+        section.moving_enemies[i].enemy_die()
         if (section.moving_enemies[i].hp > 0):
             section.moving_enemies[i].enemy_move(section.stable_grounds)
 
@@ -200,6 +202,10 @@ def section_gameplay(section):
     if (Anna.player_jump(pressedKey, section.stable_grounds, section.moving_grounds) == False):
         Anna.player_fall(Anna.yspd, section.stable_grounds, section.moving_grounds)
 
+    if (Anna.swim == True):
+        if (Anna.y + Anna.height > HEIGHT):
+            Anna.setPos(Anna.x, HEIGHT - Anna.height)
+
     Anna.player_skill(pressedKey, Anna_paint)
     Anna.player_attack(pressedKey, section)
     Anna_brush.brush_move(Anna)
@@ -207,8 +213,10 @@ def section_gameplay(section):
     Anna_brush.brush_hit(section.stable_enemies)
     Anna_brush1.brush_stay(Anna)
 
+    Anna_paint.check_amount()
+
     for i in range(len(section.throw_stuffs)):
-        section.throw_stuffs[i].stuff_move(section.moving_enemies, big_boss, section.stable_grounds)
+        section.throw_stuffs[i].stuff_move(section.moving_enemies, big_boss, section.stable_grounds, Anna_paint)
 
     for i in range(len(section.moving_npc)):
         section.moving_npc[i].npc_move(section.stable_grounds)
@@ -257,6 +265,8 @@ def section_gameplay(section):
     # grounds
     for i in range(len(section.stable_grounds)):
         screen.blit(section.stable_grounds[i].getSurface(), section.stable_grounds[i].getPos())
+        for j in range(len(section.stable_grounds[i].images)):
+            screen.blit(section.stable_grounds[i].images[j].getSurface(), section.stable_grounds[i].images[j].getPos())
 
     for i in range(len(section.traps)):
         screen.blit(section.traps[i].getSurface(), section.traps[i].getPos())
@@ -346,7 +356,7 @@ def section1_init():
     section1.stable_grounds.append(ground(150, 40, section1.stable_grounds[0].x + section1.stable_grounds[0].width + 200, 300))
     section1.stable_grounds.append(ground(WIDTH + 200, 100, section1.stable_grounds[1].x + section1.stable_grounds[1].width + 250, HEIGHT - 100))
     section1.stable_grounds.append(ground(WIDTH + 350, 150, section1.stable_grounds[1].x + section1.stable_grounds[1].width + 140, section1.stable_grounds[2].y + section1.stable_grounds[2].height))
-    section1.stable_grounds.append(ground(2100, 1000, 0, section1.stable_grounds[3].y + section1.stable_grounds[3].height))
+    section1.stable_grounds.append(ground(2100, 600, 0, section1.stable_grounds[3].y + section1.stable_grounds[3].height))
     section1.stable_grounds.append(ground(500, 260, section1.stable_grounds[2].x + section1.stable_grounds[2].width - 700, section1.stable_grounds[2].y - 260))
     section1.stable_grounds.append(ground(section1.stable_grounds[0].width + 100, section1.stable_grounds[2].height + section1.stable_grounds[3].height + section1.stable_grounds[4].height, section1.stable_grounds[2].x + section1.stable_grounds[2].width + 1000, section1.stable_grounds[3].y))
     section1.stable_grounds.append(ground(1000, 100, section1.stable_grounds[3].x + section1.stable_grounds[3].width, section1.stable_grounds[3].y))
@@ -357,7 +367,9 @@ def section1_init():
 
     section1.moving_npc.append(moving_npc(30, 30, section1.stable_grounds[4].x + 300, section1.stable_grounds[4].y - 30))
     section1.moving_npc[0].set_rangex(section1.stable_grounds[4].x + 300, section1.stable_grounds[4].x + 600)
-    section1.moving_npc[0].setColor((255, 0, 0))
+
+    section1.moving_npc.append(moving_npc(30, 30, section1.stable_grounds[4].x + 300, section1.stable_grounds[4].y - 30))
+    section1.moving_npc[1].set_rangex(section1.stable_grounds[4].x + 1000, section1.stable_grounds[4].x + 1200)
 
 
     section1.items.append(interactive_object(20, 20, section1.stable_grounds[5].x + 50, section1.stable_grounds[5].y - 30))
@@ -369,8 +381,8 @@ def section1_init():
     section1.npc.append(npc(30, 30, section1.stable_grounds[6].x + 700, section1.stable_grounds[6].y - 30))
 
     section1.moving_npc.append(moving_npc(30, 30, section1.stable_grounds[6].x + 10, section1.stable_grounds[6].y - 30, 0.1))
-    section1.moving_npc[0].set_rangex(section1.stable_grounds[6].x, section1.npc[3].x - 30)
-    section1.moving_npc[0].setColor((255, 0, 0))
+    section1.moving_npc[2].set_rangex(section1.stable_grounds[6].x, section1.npc[3].x - 30)
+
 
     section1.instruction_points.append(instruction_point(50, 50, section1.stable_grounds[0].x + 200, section1.stable_grounds[0].y - 50))
 
@@ -441,6 +453,9 @@ def section1_gameplay():
 
     if (scenechange != 1):
         section_gameplay(section1)
+
+    if (Anna.x < 0):
+        Anna.setPos(0, Anna.y)
 
     if (Anna.x >= WIDTH and scenechange == -1):
         section_area = 2
@@ -1592,7 +1607,6 @@ while running:
 
 
     pressedKey = pygame.key.get_pressed()
-    print(section_area)
 
 
     if (section_area == 0):

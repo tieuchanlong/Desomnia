@@ -147,7 +147,10 @@ class player(sprite):
                 self.start_attack = pygame.time.get_ticks()
                 self.attack_typ = (self.attack_typ + 1) % 3
                 section.throw_stuffs.append(throw_stuff(self.attack_typ, self.dir))
-                section.throw_stuffs[len(section.throw_stuffs)-1].setPos(self.x + self.width - section.throw_stuffs[len(section.throw_stuffs)-1].width, self.y + section.throw_stuffs[len(section.throw_stuffs)-1].height)
+                if (self.attack_typ < 2):
+                    section.throw_stuffs[len(section.throw_stuffs)-1].setPos(self.x + self.width - section.throw_stuffs[len(section.throw_stuffs)-1].width, self.y)
+                else:
+                    section.throw_stuffs[len(section.throw_stuffs) - 1].setPos(self.x + self.width - section.throw_stuffs[len(section.throw_stuffs) - 1].width, self.y - 40)
 
         if (self.end_attack - self.start_attack >= 1000):
             self.normal_active = False
@@ -157,7 +160,7 @@ class player(sprite):
 
 
     def player_skill(self, pressedKey, paint):
-        if (pressedKey[pygame.K_q] and paint.height > 0):
+        if (pressedKey[pygame.K_q] and paint.amount > 0):
             if (self.skill_active == False):
                 self.attack = True
                 paint.dec_bar(10) # can change value
@@ -166,7 +169,7 @@ class player(sprite):
 
     def dec_hp(self):
         if (self.hp > 0):
-            self.hp_bars[self.hp - 1].setColor((0, 0, 0))
+            self.hp_bars[self.hp - 1].surface = pygame.image.load('media/hp_broken.png').convert_alpha()
             self.hp -=1
 
     def player_idle_anim(self):
@@ -253,6 +256,7 @@ class enemy(sprite):
         self.bounce = False
         self.att_imagecounter = -1
         self.idl_imagecounter = -1
+        self.die_imagecounter = -1
 
 
     def setScale(self, width, height):
@@ -379,6 +383,12 @@ class enemy(sprite):
             else:
                 player.dir = -1
 
+    def enemy_die(self):
+        if (self.hp == 0):
+            self.enemy_die_anim()
+            if (self.die_imagecounter >= 40):
+                self.setPos(-10000, -10000)
+
     def enemy_idle_anim(self):
         self.idl_imagecounter += 1
         self.att_imagecounter = -1
@@ -387,6 +397,8 @@ class enemy(sprite):
             self.idl_imagecounter = 0
 
         self.surface = pygame.image.load('media/enemy_idle_0' + str(int(self.idl_imagecounter / 10)) + '.png').convert_alpha()
+        self.surface = pygame.transform.scale(self.surface, (40, 40))
+
         if (self.dir == 1):
             self.surface = pygame.transform.flip(self.surface, 1, 0)
         else:
@@ -400,17 +412,23 @@ class enemy(sprite):
             self.att_imagecounter = 0
 
         self.surface = pygame.image.load('media/enemy_att_0' + str(int(self.att_imagecounter / 10)) + '.png').convert_alpha()
+        self.surface = pygame.transform.scale(self.surface, (40, 40))
+
         if (self.dir == 1):
             self.surface = pygame.transform.flip(self.surface, 1, 0)
         else:
             self.surface = pygame.transform.flip(self.surface, 0, 0)
 
     def enemy_die_anim(self):
-        self.imagecounter += 1
-        if self.imagecounter >= 40:
-            self.imagecounter = 0
+        self.die_imagecounter += 1
 
-        self.surface = pygame.image.load('media/enemy_die_0' + str(int(self.imagecounter / 10)) + '.png').convert_alpha()
+        if self.att_imagecounter >= 40:
+            self.die_imagecounter = 0
+            self.surface = pygame.image.load('media/enemy_die_00.png').convert_alpha()
+            self.surface = pygame.transform.scale(self.surface, (40, 40))
+        else:
+            self.surface = pygame.image.load('media/enemy_die_0' + str(int(self.die_imagecounter / 10)) + '.png').convert_alpha()
+            self.surface = pygame.transform.scale(self.surface, (40, 40))
 
 
 class jumping_enemy(enemy):
@@ -587,7 +605,6 @@ class boss(enemy):
 
         if (self.attack_typ == 1):
             # load some animation
-            print(self.rocks[0].y)
 
             self.x = self.x
 
@@ -620,7 +637,6 @@ class npc(sprite):
                 self.talk = True
 
     def npc_idle(self):
-        print(self.imagecounter)
         self.imagecounter += 1
         if self.imagecounter >= 30:
             self.imagecounter = 0
@@ -641,10 +657,10 @@ class moving_npc(npc):
         self.x += self.xspd * self.dir
 
         if (self.x < self.move_range[0]):
-            self.dir = -self.dir
+            self.dir = 1
 
         if (self.x > self.move_range[1] - self.width):
-            self.dir = -self.dir
+            self.dir = -1
 
         self.npc_idle()
 

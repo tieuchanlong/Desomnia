@@ -37,13 +37,14 @@ class ground(sprite): # the mid ground for climbing
         self.surface = pygame.Surface(self.dim, pygame.SRCALPHA, 32)
         self.setColor((0, 0, 0))
         self.surface = pygame.image.load('media/grassground.png').convert_alpha()
-        self.surface = pygame.transform.scale(self.surface, (width, height))
+        self.surface = pygame.transform.scale(self.surface, (width, min(height, 300)))
+        self.images = []
 
-        '''i = self.x
-        while (i < self.x + self.width):
-            self.images.append(image('media/grassground.png', i, self.y, 20, 10))
-            if (self.x - self.width - i < 20):
-                self.images.append(image('media/grassground.png', self.x - self.width - 10, self.y, 20, 10))'''
+        i = self.x
+        '''while (i < self.x + self.width):
+            self.images.append(image('media/grassground.png', i, self.y, 1200, min(self.height, 500)))
+            if (self.x + self.width - i < 1200):
+                self.images.append(image('media/grassground.png', self.x - self.width - 10, self.y, self.x + self.width - i, min(self.height, 500)))'''
 
 class trigger(sprite): # the mid ground for climbing
     def __init__(self, width, height, x=0, y=0):  # add frames input

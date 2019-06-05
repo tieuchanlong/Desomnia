@@ -2,10 +2,10 @@ from myParentclass import *
 
 class save_point(interactive_object):
     def __init__(self, width, height, x=0, y=0, ar=0):
-        interactive_object.__init__(self, width, height, x, y)
+        interactive_object.__init__(self, width, height, x, y - 20)
         self.area = ar
         self.org_x = x
-        self.org_y = y
+        self.org_y = y - 20
         self.imagecounter = -1
 
     def save_game(self, pressedKey, player, section):
@@ -23,8 +23,8 @@ class save_point(interactive_object):
         if self.imagecounter >= 24:
             self.imagecounter = 0
 
-        self.surface = pygame.image.load('media/fireplace_0' + str(int(self.imagecounter / 4)) + '.gif').convert_alpha()
-        self.surface = pygame.transform.scale(self.surface, (self.width, self.height + 70))
+        self.surface = pygame.image.load('media/fireplace-' + str(int(self.imagecounter / 4)) + '.png').convert_alpha()
+        self.surface = pygame.transform.scale(self.surface, (60, 60))
 
 class instruction_point(interactive_object):
     def __init__(self, width, height, x=0, y=0, ar=0):
@@ -163,7 +163,7 @@ class throw_stuff(sprite):
     def __init__(self, typ = 0, direction = 1):  # add frames input
         sprite.__init__(self, 0, 0)
         self.xspd = 10
-        self.yspd = -10
+        self.yspd = -15
         self.dir = direction
         self.turn = 1
         self.round = 0
@@ -173,8 +173,8 @@ class throw_stuff(sprite):
             self.height = 10
             self.yspd = 0
         else:
-            self.width = 25
-            self.height = 15
+            self.width = 80
+            self.height = 40
 
         self.dim = (self.width, self.height)
         self.surface = pygame.Surface(self.dim, pygame.SRCALPHA, 32)
@@ -194,9 +194,8 @@ class throw_stuff(sprite):
         self.blue = 0
         self.color = (self.red, self.green, self.blue)
 
-    def stuff_move(self, enemies, boss, grounds):
+    def stuff_move(self, enemies, boss, grounds, paint):
         self.stuff_anim()
-        print(self.dir)
         for i in range(len(grounds)):
             if (self.checkcollision(self, grounds[i]) and self.y <= grounds[i].y):
                 self.xspd = 0
@@ -217,6 +216,8 @@ class throw_stuff(sprite):
                     enemies[i].dir = -1
                 else:
                     enemies[i].dir = 1
+
+                paint.dec_bar(-5)
 
                 return
 
@@ -243,7 +244,11 @@ class throw_stuff(sprite):
         if self.imagecounter >= 8:
             self.imagecounter = 0
 
-        self.surface = pygame.image.load('media/magic_orb0' + str(int(self.imagecounter/2)) + '.png').convert_alpha()
+        if (self.typ < 2):
+            self.surface = pygame.image.load('media/magic_orb0' + str(int(self.imagecounter/2)) + '.png').convert_alpha()
+        else:
+            self.surface = pygame.image.load('media/cat.png').convert_alpha()
+            self.surface = pygame.transform.scale(self.surface, (80, 60))
         if (self.dir == 1):
             self.surface = pygame.transform.flip(self.surface, 1, 0)
         else:
@@ -307,7 +312,7 @@ class rock(sprite):
         self.yspd = 6
         self.dir1 = 1
         self.surface = pygame.Surface(self.dim, pygame.SRCALPHA, 32)
-        self.surface.fill(self.color)
+        self.surface = pygame.image.load('media/lava_rock.png').convert_alpha()
 
     def move_x(self, dist):
         self.setPos(self.x + dist, self.y)

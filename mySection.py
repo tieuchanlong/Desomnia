@@ -32,6 +32,8 @@ class section:
 
         for i in range(len(self.stable_grounds)):
             self.stable_grounds[i].setPos(self.stable_grounds[i].x + distance, self.stable_grounds[i].y)
+            for j in range(len(self.stable_grounds[i].images)):
+                self.stable_grounds[i].images[j].setPos(self.stable_grounds[i].images[j].x + distance, self.stable_grounds[i].images[j].y)
 
 
         for i in range(len(self.items)):
@@ -83,6 +85,8 @@ class section:
 
         for i in range(len(self.stable_grounds)):
             self.stable_grounds[i].setPos(self.stable_grounds[i].x, self.stable_grounds[i].y + distance)
+            for j in range(len(self.stable_grounds[i].images)):
+                self.stable_grounds[i].images[j].setPos(self.stable_grounds[i].images[j].x, self.stable_grounds[i].images[j].y + distance)
 
         for i in range(len(self.items)):
             self.items[i].setPos(self.items[i].x, self.items[i].y + distance)

@@ -67,12 +67,16 @@ class interactive_object(sprite):
         self.dim = (self.width, self.height)
         self.typ = random.randrange(3)
         self.collect = False
+        self.check = False
         self.surface = pygame.Surface(self.dim, pygame.SRCALPHA, 32)
-        self.surface.fill(self.color)
+        self.surface = pygame.image.load('media/coin00.png').convert_alpha()
+        self.surface = pygame.transform.scale(self.surface, (20, 20))
+        self.coin_check = True
+        self.imagecounter = 0
 
     def interact(self, pressedKey, player):
         #Add some interaction
-        if (abs(player.x - self.x) <= 150):
+        if (abs(player.x - self.x) <= 100):
             if (pressedKey[pygame.K_e]):
                 self.setPos(-10000, -10000)
                 self.collect = True
@@ -82,6 +86,15 @@ class interactive_object(sprite):
 
     def move_y(self, dist):
         self.setPos(self.x, self.y + dist)
+
+    def coin_anim(self):
+        self.imagecounter += 1
+
+        if self.imagecounter >= 12:
+            self.imagecounter = 0
+
+        self.surface = pygame.image.load('media/coin0' + str(int(self.imagecounter / 3)) + '.png').convert_alpha()
+        self.surface = pygame.transform.scale(self.surface, (20, 20))
 
 class image(sprite):
     def __init__(self, fileName, x=0, y=0, width=0, height=0):

@@ -1,5 +1,6 @@
 from myParentclass import *
 from myObject import *
+from myDialogue import *
 import pygame
 
 WIDTH = 900
@@ -31,7 +32,12 @@ class player(sprite):
         self.bounce_count = 0
         self.idl_imagecounter = -1
         self.walk_imagecounter = -1
-        self.jump_imagecounter = -1
+        self.swim_imagecounter = -1
+        self.drawings = text(WIDTH - 30, 20, '0', 40, "Renogare", (255, 255, 255))
+        self.drawing_UI = image('media/star.png', WIDTH - 100, 10, 50, 50)
+        self.coins = text(WIDTH - 30, 100, '0', 40, "Renogare", (255, 255, 255))
+        self.coin_UI = image('media/coin00.png', WIDTH - 100, 90, 50, 50)
+        self.coin_UI.surface = pygame.transform.scale(self.coin_UI.surface, (40, 40))
 
     def playerMove(self, pressedKey, spd):
         if (self.bounce == False):
@@ -194,13 +200,13 @@ class player(sprite):
         if self.walk_imagecounter >= 20:
             self.walk_imagecounter = 0
 
-        self.surface = pygame.image.load('media/anna_walk_0' + str(int(self.walk_imagecounter / 10)) + '.png').convert_alpha()
+        self.surface = pygame.image.load('media/anna_walk_0' + str(int(self.walk_imagecounter / 5)) + '.png').convert_alpha()
         if (self.dir == 1):
             self.surface = pygame.transform.flip(self.surface, 0, 0)
         else:
             self.surface = pygame.transform.flip(self.surface, 1, 0)
 
-    def player_jump_anim(self):
+    '''def player_jump_anim(self):
         self.jump_imagecounter += 1
         self.walk_imagecounter = -1
         self.idl_imagecounter = -1
@@ -212,7 +218,7 @@ class player(sprite):
         if (self.dir == 1):
             self.surface = pygame.transform.flip(self.surface, 0, 0)
         else:
-            self.surface = pygame.transform.flip(self.surface, 1, 0)
+            self.surface = pygame.transform.flip(self.surface, 1, 0)'''
 
     def player_att_anim(self):
         self.att_imagecounter += 1
@@ -227,12 +233,14 @@ class player(sprite):
         else:
             self.surface = pygame.transform.flip(self.surface, 0, 0)
 
-    def player_die_anim(self):
-        self.imagecounter += 1
-        if self.imagecounter >= 40:
-            self.imagecounter = 0
 
-        self.surface = pygame.image.load('media/enemy_die_0' + str(int(self.imagecounter / 10)) + '.png').convert_alpha()
+
+    def player_swim_anim(self):
+        self.swim_imagecounter += 1
+        if self.swim_imagecounter >= 40:
+            self.swim_imagecounter = 0
+
+        self.surface = pygame.image.load('media/enemy_die_0' + str(int(self.swim_imagecounter / 10)) + '.png').convert_alpha()
 
 
 
@@ -565,11 +573,14 @@ class boss(enemy):
         self.start_attack = 0
         self.end_attack = 0
         self.dir = 1
-        self.xspd = 20
-        self.hp = 50
-        self.move_range = (self.x, self.x + WIDTH - 100)
+        self.xspd = 10
+        self.hp = 30
+        self.move_range = (self.x, self.x + WIDTH)
         self.surface.fill(self.color)
         self.rocks = []
+        self.att_imagecounter = -1
+        self.angry_imagecounter = -1
+        self.die_imagecounter = -1
 
     def move_x(self, dist):
         self.setPos(self.x + dist, self.y)
@@ -579,41 +590,113 @@ class boss(enemy):
         self.setPos(self.x, self.y + dist)
 
     def boss_attack(self, player):
-        self.end_attack = pygame.time.get_ticks()
+        if (self.hp > 0):
+            self.end_attack = pygame.time.get_ticks()
 
-        for i in range(len(self.rocks)):
-            self.rocks[i].rock_move(player)
+            for i in range(len(self.rocks)):
+                self.rocks[i].rock_move(player)
 
-        if (self.end_attack - self.start_attack >= 10000):
+            if (self.end_attack - self.start_attack >= 10000):
+                if (self.attack_typ == 0):
+                    for i in range(20):
+                        self.rocks.append(rock(50, 50, self))
+                        while True:
+                            check = False
+                            for j in range(len(self.rocks)-1):
+                                if (self.rocks[j].checkcollision(self.rocks[j], self.rocks[len(self.rocks)-1])):
+                                    check = True
+
+                            if (check == False):
+                                break
+
+                            if (check == True):
+                                check = False
+                                self.rocks[len(self.rocks)-1].setPos(random.randrange(int(self.move_range[0]), int(self.move_range[1]) + 100), self.y - random.randrange(HEIGHT, HEIGHT + 200))
+
+                self.attack_typ = (self.attack_typ + 1) % 2
+                self.start_attack = pygame.time.get_ticks()
+
             if (self.attack_typ == 0):
-                for i in range(10):
-                    self.rocks.append(rock(50, 50, self))
+                self.boss_att_anim()
+                self.x += self.dir * self.xspd
 
-            self.attack_typ = (self.attack_typ + 1) % 2
-            self.start_attack = pygame.time.get_ticks()
+                if (self.x < self.move_range[0]):
+                    self.dir = 1
+                    self.x = self.move_range[0]
 
-        if (self.attack_typ == 0):
-            self.x += self.dir * self.xspd
+                if (self.x > self.move_range[1]):
+                    self.dir = -1
+                    self.x = self.move_range[1]
 
-            if (self.x < self.move_range[0]):
-                self.dir = 1
-                self.x = self.move_range[0]
+            if (self.attack_typ == 1):
+                # load some animation
+                self.boss_angry_ani()
 
-            if (self.x > self.move_range[1]):
-                self.dir = -1
-                self.x = self.move_range[1]
+                self.x = self.x
 
-        if (self.attack_typ == 1):
-            # load some animation
+            if (self.checkcollision(self, player)):
+                player.jump = -15
 
-            self.x = self.x
+                if (player.jump == -15 and player.bounce == False):
+                    player.dec_hp()
 
-        self.pos = (self.x, self.y)
+                player.bounce = True
 
-    def boss_die(self, flower):
-        if (self.hp == 0):
+                if (player.x > self.x):
+                    player.dir = 1
+                else:
+                    player.dir = -1
+
+            self.pos = (self.x, self.y)
+
+    def boss_die(self):
+        if (self.hp <= 0):
             # Load death animation
-            flower.setPos(self.x + 100, self.y + self.height - flower.height)
+            self.boss_die_ani()
+
+    def boss_att_anim(self):
+        self.att_imagecounter += 1
+        self.angry_imagecounter = -1
+        self.die_imagecounter = -1
+
+        if self.att_imagecounter >= 70:
+            self.att_imagecounter = 0
+
+        self.surface = pygame.image.load('media/boss_attack0' + str(int(self.att_imagecounter / 10)) + '.png').convert_alpha()
+        self.surface = pygame.transform.scale(self.surface, (self.width, self.height))
+
+        if (self.dir == 1):
+            self.surface = pygame.transform.flip(self.surface, True, False)
+        else:
+            self.surface = pygame.transform.flip(self.surface, False, False)
+
+
+    def boss_angry_ani(self):
+        self.att_imagecounter = -1
+        self.angry_imagecounter += 1
+        self.die_imagecounter = -1
+
+        if self.angry_imagecounter >= 24:
+            self.angry_imagecounter= 0
+
+        self.surface = pygame.image.load('media/boss_angry0' + str(int(self.angry_imagecounter / 4)) + '.png').convert_alpha()
+        self.surface = pygame.transform.scale(self.surface, (self.width, self.height))
+
+    def boss_die_ani(self):
+        self.att_imagecounter = -1
+        self.angry_imagecounter = -1
+        self.die_imagecounter += 1
+
+        if self.die_imagecounter >= 60:
+            self.die_imagecounter = 0
+            self.surface = pygame.image.load('media/boss_die0' + str(int(self.die_imagecounter / 10)) + '.png').convert_alpha()
+            self.surface = pygame.transform.scale(self.surface, (self.width, self.height))
+            self.setPos(-10000, -10000)
+
+
+        self.surface = pygame.image.load('media/boss_die0' + str(int(self.die_imagecounter / 10)) + '.png').convert_alpha()
+        self.surface = pygame.transform.scale(self.surface, (self.width, self.height))
+        self.surface = pygame.transform.flip(self.surface, True, False)
 
 
 class npc(sprite):

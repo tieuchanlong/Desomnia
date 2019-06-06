@@ -10,7 +10,7 @@ class save_point(interactive_object):
 
     def save_game(self, pressedKey, player, section):
         # save game
-        if (abs(player.x - self.x) <= 150):
+        if (abs(player.x - self.x) <= 100):
             if (pressedKey[pygame.K_e]):
                 self.setColor((255, 255, 0))
                 return 1, (section, self.org_x, self.org_y + self.height - player.height)
@@ -34,7 +34,7 @@ class instruction_point(interactive_object):
 
     def interact(self, pressedKey, player):
         # Add some interaction
-        if (abs(player.x - self.x) <= 150):
+        if (abs(player.x - self.x) <= 100):
             if (pressedKey[pygame.K_e]):
                 # Add instructions
                 return
@@ -46,7 +46,7 @@ class control_panel(interactive_object):
 
 
     def interact(self, pressedKey, player):
-        if (abs(player.x - self.x) <= 150):
+        if (abs(player.x - self.x) <= 100):
             if (pressedKey[pygame.K_e]):
                 self.setColor((255, 255, 0))
                 self.active = True
@@ -60,6 +60,9 @@ class drawing_piece(interactive_object):
     def interact(self, pressedKey, player):
         if (self.checkcollision(self, player)):
             self.setPos(-10000, -10000)
+            self.collect = True
+            print('Yes')
+
 
 class gate(interactive_object):
     def __init__(self, width, height, x=0, y=0):
@@ -69,11 +72,30 @@ class gate(interactive_object):
 
     def enter_gate(self, pressedKey, player):
         # save game
-        if (abs(player.x - self.x) <= 150):
+        if (abs(player.x - self.x) <= 100):
             if (pressedKey[pygame.K_e]):
                 self.setColor((255, 255, 0))
                 self.active = True
 
+class water_fountain(interactive_object):
+    def __init__(self, width, height, x=0, y=0):
+        interactive_object.__init__(self, width, height, x, y)
+        self.active = False
+        self.coin_check = False
+        self.surface = pygame.image.load('media/water_fountain.png').convert_alpha()
+        self.surface = pygame.transform.scale(self.surface, (width, height))
+
+    def interact(self, pressedKey, player):
+        return
+
+    def put_coin(self, pressedKey, player, coins):
+        # save game
+        if (abs(player.x - self.x) <= 100 and coins >= 5):
+            if (pressedKey[pygame.K_e]):
+                # minus the amount of coins
+                return 5
+
+        return 0
 
 
 class stair(interactive_object):
@@ -180,14 +202,6 @@ class throw_stuff(sprite):
         self.surface = pygame.Surface(self.dim, pygame.SRCALPHA, 32)
         self.imagecounter = -1
 
-        '''if (self.typ < 2):
-            self.surface = pygame.image.load('media/orb.png').convert_alpha()
-        else:
-            self.surface = pygame.image.load('media/cat.png').convert_alpha()
-            if (self.dir == 1):
-                self.surface = pygame.transform.flip(self.surface, 1, 0)
-            else:
-                self.surface = pygame.transform.flip(self.surface, 1, 0)'''
 
         self.red = 0
         self.green = 0
@@ -284,6 +298,7 @@ class bullet(sprite):
 
         if (self.checkcollision(self, player)):
             #player take damage animation
+            player.dir = self.dir
             self.dir = 0
             self.setPos(-3000, -3000)
 
@@ -294,17 +309,12 @@ class bullet(sprite):
 
             player.bounce = True
 
-            if (player.x + player.width/2 > self.x):
-                player.dir = -1
-            else:
-                player.dir = 1
-
         self.pos = (self.x, self.y)
 
 class rock(sprite):
     def __init__(self, width, height, boss):  # add frames input
-        x = random.randrange(int(boss.move_range[0]), int(boss.move_range[1]) + 100)
-        y = boss.y - random.randrange(HEIGHT, HEIGHT + 200)
+        x = random.randrange(int(boss.move_range[0]) - 100, int(boss.move_range[1]) + 200)
+        y = boss.y - random.randrange(HEIGHT - 1000, HEIGHT - 500)
         sprite.__init__(self, x, y)
         self.width = width
         self.height = height
@@ -313,6 +323,7 @@ class rock(sprite):
         self.dir1 = 1
         self.surface = pygame.Surface(self.dim, pygame.SRCALPHA, 32)
         self.surface = pygame.image.load('media/lava_rock.png').convert_alpha()
+        self.surface = pygame.transform.scale(self.surface, (self.width, self.height))
 
     def move_x(self, dist):
         self.setPos(self.x + dist, self.y)

@@ -58,6 +58,10 @@ class text():
         self.y = y
         self.pos = (self.x, self.y)
 
+    def setText(self, text):
+        self.content = text
+        self.surface = self.font.render(self.content, 1, self.color)
+
     def gettextpos(self):
         return self.pos
 

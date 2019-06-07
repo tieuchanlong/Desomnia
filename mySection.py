@@ -19,9 +19,13 @@ class section:
         self.control_panels = []
         self.saving_point = save_point(100, 20, 0, 0)
         self.instruction_points = []
+        self.backgrounds = []
 
     def move_x(self, distance):
         self.saving_point.setPos(self.saving_point.x + distance, self.saving_point.y)
+
+        for i in range(len(self.backgrounds)):
+            self.backgrounds[i].setPos(self.backgrounds[i].x + distance, self.saving_point.y)
 
         for i in range(len(self.stable_enemies)):
             self.stable_enemies[i].setPos(self.stable_enemies[i].x + distance, self.stable_enemies[i].y)
@@ -76,6 +80,9 @@ class section:
 
     def move_y(self, distance):
         self.saving_point.setPos(self.saving_point.x, self.saving_point.y + distance)
+
+        for i in range(len(self.backgrounds)):
+            self.backgrounds[i].setPos(self.backgrounds[i].x, self.saving_point.y + distance)
 
         for i in range(len(self.stable_enemies)):
             self.stable_enemies[i].setPos(self.stable_enemies[i].x, self.stable_enemies[i].y + distance)

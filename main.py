@@ -328,6 +328,9 @@ def section_gameplay(section):
         for j in range(len(section.stable_grounds[i].images)):
             screen.blit(section.stable_grounds[i].images[j].getSurface(), section.stable_grounds[i].images[j].getPos())
 
+    for i in range(len(section.backgrounds)):
+        screen.blit(section.backgrounds[i].getSurface(), section.backgrounds[i].getPos())
+
     for i in range(len(section.traps)):
         screen.blit(section.traps[i].getSurface(), section.traps[i].getPos())
 
@@ -1870,6 +1873,7 @@ while running:
     conversation.conv1(pressedKey, screen)
     conversation.conv2(pressedKey, screen)
     conversation.conv3(pressedKey, screen)
+    conversation.conv4(pressedKey, screen)
 
     scene_change()
     pygame.display.update()

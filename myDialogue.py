@@ -303,6 +303,16 @@ def dialogue22():
     screen.blit(dialogueboxload, (50, 10))
     screen.blit(nodi3.getText(), nodi3.gettextpos())
 
+def dialogue23():
+    nodi3 = text(350, 30, "Creature: Umu...", 30, "Renogare", WHITE)
+    x = 50 + dialogueboxload.get_width() / 2 - nodi3.getText().get_width() / 2
+    y = 10 + dialogueboxload.get_height() / 2 - nodi3.getText().get_height() / 2
+    nodi3.textsetpos(x, y)
+
+
+    screen.blit(dialogueboxload, (50, 10))
+    screen.blit(nodi3.getText(), nodi3.gettextpos())
+
 def pause_screen():
     global pauselevel
 

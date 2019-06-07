@@ -10,6 +10,7 @@ from myBackground import *
 from mySection import *
 from myObject import *
 from myStats import *
+from myDialogue_class import *
 pygame.init() # load the pygame module commands in the program
 
 # Display variables
@@ -59,6 +60,7 @@ global big_boss
 global coins_collect
 global stars
 global gate_open
+global conversation
 
 big_boss = boss(300, 200, 0, 0)
 big_boss.setColor((255, 0, 0))
@@ -71,14 +73,18 @@ npc2_talk = False
 boss_fight = False
 gate_open = False
 
+conversation = dialogue()
+
 stars = []
+for i in range(9):
+    stars.append(drawing_piece(20, 20, -10000, -10000))
 
 coins_collect = 0
 
 for i in range(3):
     flowers.append(interactive_object(20, 20, 0, 0))
 
-section_area = 14
+section_area = 6
 scenechange = -1
 save_count = 0
 saving = (0, 0, 0)
@@ -207,7 +213,9 @@ def section_gameplay(section):
 
     Anna.player_pickup(pressedKey, section.items)
     Anna.player_pickup(pressedKey, stars)
-    Anna.player_pickup(pressedKey, flowers)
+
+    if (conversation.dialogue_unlocked[12] == True):
+        Anna.player_pickup(pressedKey, flowers)
 
     for i in range(len(section.items)):
         if (section.items[i].coin_check == True):
@@ -236,7 +244,7 @@ def section_gameplay(section):
         saving = saving1
 
     if (Anna.swim == False):
-        Anna.playerMove(pressedKey,Anna.xspd)
+        Anna.playerMove(pressedKey,Anna.xspd, conversation)
 
     # moving enemies
     for i in range(len(section.moving_enemies)):
@@ -255,15 +263,15 @@ def section_gameplay(section):
     for i in range(len(section.bullets)):
         section.bullets[i].bullet_move(Anna)
 
-    if (Anna.player_jump(pressedKey, section.stable_grounds, section.moving_grounds) == False):
+    if (Anna.player_jump(pressedKey, section.stable_grounds, section.moving_grounds, conversation) == False):
         Anna.player_fall(Anna.yspd, section.stable_grounds, section.moving_grounds)
 
     if (Anna.swim == True):
         if (Anna.y + Anna.height > HEIGHT):
             Anna.setPos(Anna.x, HEIGHT - Anna.height)
 
-    Anna.player_skill(pressedKey, Anna_paint)
-    Anna.player_attack(pressedKey, section)
+    Anna.player_skill(pressedKey, Anna_paint, conversation)
+    Anna.player_attack(pressedKey, section, conversation)
     Anna_brush.brush_move(Anna)
     Anna_brush.brush_hit(section.moving_enemies)
     Anna_brush.brush_hit(section.stable_enemies)
@@ -442,8 +450,11 @@ def section1_init():
     # Items
     section1.items.append(interactive_object(20, 20, section1.stable_grounds[5].x + 50, section1.stable_grounds[5].y - 30))
 
-    if (len(stars) < 1):
-        stars.append(drawing_piece(20, 20, section1.stable_grounds[4].x + 200, section1.stable_grounds[4].y - 30))
+    for i in range(9):
+        stars[i].setPos(-10000, -10000)
+
+    if (stars[0].collect == False):
+        stars[0].setPos(section1.stable_grounds[4].x + 200, section1.stable_grounds[4].y - 30)
 
     # Set up boundaries
     global start_x
@@ -518,7 +529,7 @@ def section1_gameplay():
 
     if (Anna.x >= WIDTH and scenechange == -1):
         section_area = 2
-        saving = (2, 0, HEIGHT - 100)
+        saving = (2, 100, HEIGHT - 200)
         scenechange = 0
 
 
@@ -626,16 +637,18 @@ def section2_init():
     section2.saving_point = save_point(100, 20, section2.stable_grounds[1].x + 10, section2.stable_grounds[1].y - 20)
 
     # NPC
-    section2.moving_npc.append(moving_npc(30, 30, section2.stable_grounds[0].x, section2.stable_grounds[0].y - 30))
-    section2.moving_npc[0].set_rangex(section2.stable_grounds[0].x, section2.stable_grounds[1].x - 130)
+    section2.moving_npc.append(moving_npc(30, 30, section2.stable_grounds[0].x + 200, section2.stable_grounds[0].y - 30))
+    section2.moving_npc[0].set_rangex(section2.stable_grounds[0].x + 200, section2.stable_grounds[1].x - 130)
 
-    section2.moving_npc.append(moving_npc(30, 30, section2.moving_npc[0].x + section2.moving_npc[0].width + 100, section2.stable_grounds[0].y - 30))
+    section2.moving_npc.append(moving_npc(30, 30, section2.moving_npc[0].x + section2.moving_npc[0].width + 200, section2.stable_grounds[0].y - 30))
     section2.moving_npc[1].set_rangex(section2.moving_npc[1].x, section2.stable_grounds[1].x - 30)
 
 
     section2.hor_ground = 1
 
-    section2.moving_grounds.append(moving_ground(150, 50, section2.stable_grounds[0].x, section2.moving_npc[0].y - 50))
+    section2.moving_grounds.append(moving_ground(250, 50, section2.stable_grounds[0].x + 100, section2.moving_npc[0].y - 50))
+    section2.moving_grounds[0].surface = pygame.image.load('media/woodlog.png').convert_alpha()
+    section2.moving_grounds[0].surface = pygame.transform.scale(section2.moving_grounds[0].surface, (section2.moving_grounds[0].width, section2.moving_grounds[0].height))
     section2.moving_grounds[0].set_rangex(section2.moving_npc[0].x, section2.stable_grounds[1].x)
     section2.moving_grounds[0].xspd = 1
     section2.moving_grounds[0].set_rangey(section2.moving_grounds[0].y, section2.moving_grounds[0].y)
@@ -656,8 +669,11 @@ def section2_init():
 
     section2.items.append(interactive_object(20, 20, section2.stable_grounds[14].x + 50, section2.stable_grounds[14].y - 30))
 
-    if (len(stars) < 2):
-        stars.append(drawing_piece(20, 20, section2.moving_traps[4].x + 20, section2.stable_grounds[0].y + section2.stable_grounds[0].height + 200))
+    for i in range(9):
+        stars[i].setPos(-10000, -10000)
+
+    if (stars[1].collect == False):
+        stars[1].setPos(section2.moving_traps[4].x + 20, section2.stable_grounds[0].y + section2.stable_grounds[0].height + 200)
 
 
     for i in range(len(section2.moving_enemies)):
@@ -840,9 +856,12 @@ def section3_init(): # Add 1 more trap
     # Items
     section3.items.append(interactive_object(20, 20, section3.stable_grounds[1].x + 100, section3.stable_grounds[1].y - 30))
 
+    for i in range(9):
+        stars[i].setPos(-10000, -10000)
 
-    if (len(stars) < 3):
-        stars.append(drawing_piece(20, 20, section3.stable_grounds[10].x + 50, section3.stable_grounds[10].y - 30))
+    if (stars[2].collect == False):
+        stars[2].setPos(section3.stable_grounds[10].x + 50, section3.stable_grounds[10].y - 30)
+
 
     section3.items.append(interactive_object(50, 60, section3.stable_grounds[13].x + section3.stable_grounds[13].width - 50, section3.stable_grounds[13].y - 60))
     section3.items[1].setColor((255, 255, 0))
@@ -1047,11 +1066,14 @@ def section4_init():
     section4.npc.append(npc(70, 70, section4.stable_grounds[0].x + section4.stable_grounds[0].width - 200, section4.stable_grounds[0].y - 70))
 
     # Items
-    if (len(stars) < 4):
-        stars.append(drawing_piece(20, 20, section4.stable_grounds[12].x + 100, section4.stable_grounds[12].y - 40))
+    for i in range(9):
+        stars[i].setPos(-10000, -10000)
 
-    if (len(stars) < 5):
-        stars.append(drawing_piece(20, 20, section4.stable_grounds[8].x + 100, section4.stable_grounds[8].y - 40))
+    if (stars[3].collect == False):
+        stars[3].setPos(section4.stable_grounds[12].x + 100, section4.stable_grounds[12].y - 40)
+
+    if (stars[4].collect == False):
+        stars[4].setPos(section4.stable_grounds[8].x + 100, section4.stable_grounds[8].y - 40)
 
 
     section4.gates.append(gate(50, 60, section4.stable_grounds[2].x + 50, section4.stable_grounds[2].y - 60))
@@ -1099,6 +1121,7 @@ def section4_gameplay():
     global saving
     global end_x
     global big_boss
+    global  conversation
 
     section4.gates[0].enter_gate(pressedKey, Anna)
     section4.gates[1].enter_gate(pressedKey, Anna)
@@ -1110,14 +1133,30 @@ def section4_gameplay():
         if (flowers[i].collect == True):
             flowercount += 1
 
-    if (flowercount == 0):
-        section4.npc[2].npc_talk(pressedKey, Anna)
-        # load some other dialogues
-    elif (flowercount < len(flowers)):
-        section4.npc[2].npc_talk(pressedKey, Anna)
-        # load some dialogues
-    else:
-        section4.npc[2].npc_talk(pressedKey, Anna)
+    print(flowercount)
+    print(section4.npc[2].talk)
+
+    if (conversation.start == False):
+        if (conversation.dialogue_unlocked[12] == False):
+            section4.npc[2].npc_talk(pressedKey, Anna)
+            if (section4.npc[2].talk == True):
+                conversation.dialogueLEVEL = 12
+                section4.npc[2].talk = False
+                if (conversation.start == False):
+                    conversation.starttime = pygame.time.get_ticks()
+                    conversation.start = True
+            # load some other dialogues
+        elif (flowercount < len(flowers)):
+            section4.npc[2].npc_talk(pressedKey, Anna)
+            if (section4.npc[2].talk == True):
+                conversation.dialogueLEVEL = 23
+                section4.npc[2].talk = False
+                if (conversation.start == False):
+                    conversation.starttime = pygame.time.get_ticks()
+                    conversation.start = True
+            # load some dialogues
+        else:
+            section4.npc[2].npc_talk(pressedKey, Anna)
 
     if (Anna.x < 0):
         Anna.setPos(0, Anna.y)
@@ -1159,8 +1198,8 @@ def section4_gameplay():
         saving = (14, 0, 720)
         scenechange = 0
 
-    #screen.blit(stars[3].getSurface(), stars[3].getPos())
-    #screen.blit(stars[4].getSurface(), stars[4].getPos())
+    screen.blit(stars[3].getSurface(), stars[3].getPos())
+    screen.blit(stars[4].getSurface(), stars[4].getPos())
 
 
 def section5_init():
@@ -1231,11 +1270,14 @@ def section5_init():
     section5.waters.append(water(section5.stable_grounds[0].x - section5.stable_grounds[7].x - section5.stable_grounds[7].width + 1400, 500, section5.stable_grounds[7].x, section5.stable_grounds[7].y + 200))
 
     # Items
-    if (len(stars) < 6):
-        stars.append(drawing_piece(20, 20, section5.stable_grounds[6].x + 50, section5.stable_grounds[6].y - 40))
+    for i in range(9):
+        stars[i].setPos(-10000, -10000)
 
-    if (len(stars) < 7):
-        stars.append(drawing_piece(20, 20, section5.stable_grounds[6].x + 50, section5.stable_grounds[6].y - 40))
+    if (stars[5].collect == False):
+        stars[5].setPos(section5.stable_grounds[6].x + 50, section5.stable_grounds[6].y - 40)
+
+    if (stars[6].collect == False):
+        stars[6].setPos(section5.stable_grounds[6].x + 50, section5.stable_grounds[6].y - 40)
 
 
     flowers[0].setPos(section5.stable_grounds[7].x + 50, section5.stable_grounds[7].y - 30)
@@ -1415,8 +1457,11 @@ def section6_init():
     section6.moving_traps[7].set_rangey(section6.stable_grounds[12].y - 250, section6.stable_grounds[12].y + 400)
 
     # Items
-    if (len(stars) < 8):
-        stars.append(drawing_piece(20, 20, section6.stable_grounds[2].x - 100, section6.stable_grounds[6].y - 150))
+    for i in range(9):
+        stars[i].setPos(-10000, -10000)
+
+    if (stars[7].collect == False):
+        stars[7].setPos(section6.stable_grounds[2].x - 100, section6.stable_grounds[6].y - 150)
 
     section6.items.append(interactive_object(20, 20, section6.stable_grounds[12].x + 1000, section6.stable_grounds[12].y - 30))
 
@@ -1526,8 +1571,11 @@ def section7_init():
     section7.waters.append(water(2*WIDTH, 2*HEIGHT, -WIDTH, 0))
     section7.waters.append(water(2 * WIDTH, 2 * HEIGHT, section7.waters[0].x + section7.waters[0].width, 0))
 
-    if (len(stars) < 9):
-        stars.append(drawing_piece(20, 20, section7.waters[0].x + 100, section7.waters[0].y + 1000))
+    for i in range(9):
+        stars[i].setPos(-10000, -10000)
+
+    if (stars[8].collect == False):
+        stars[8].setPos(section7.waters[0].x + 100, section7.waters[0].y + 1000)
 
     # Traps
     section7.moving_traps.append(moving_trap(100, 2000, section7.waters[0].x + 200, section7.waters[0].y + 200))
@@ -1818,6 +1866,10 @@ while running:
 
     if (section_area == 15 and scenechange == -1):
         section8_gameplay()
+
+    conversation.conv1(pressedKey, screen)
+    conversation.conv2(pressedKey, screen)
+    conversation.conv3(pressedKey, screen)
 
     scene_change()
     pygame.display.update()

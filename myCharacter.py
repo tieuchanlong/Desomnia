@@ -39,27 +39,27 @@ class player(sprite):
         self.coin_UI = image('media/coin00.png', WIDTH - 100, 90, 50, 50)
         self.coin_UI.surface = pygame.transform.scale(self.coin_UI.surface, (40, 40))
 
-    def playerMove(self, pressedKey, spd):
-        if (self.bounce == False):
-            if (pressedKey[pygame.K_a]):
-                self.x -= spd
-                self.dir = -1
-                self.player_walk_anim()
-            elif (pressedKey[pygame.K_d]):
-                self.x += spd
-                self.dir = 1
-                self.player_walk_anim()
+    def playerMove(self, pressedKey, spd, conversation):
+            if (self.bounce == False):
+                if (pressedKey[pygame.K_a] and conversation.dialogueLEVEL == -1):
+                    self.x -= spd
+                    self.dir = -1
+                    self.player_walk_anim()
+                elif (pressedKey[pygame.K_d] and conversation.dialogueLEVEL == -1):
+                    self.x += spd
+                    self.dir = 1
+                    self.player_walk_anim()
+                else:
+                    self.player_idle_anim()
             else:
-                self.player_idle_anim()
-        else:
-            self.x += 10*self.dir
-            self.bounce_count += 10
+                self.x += 10*self.dir
+                self.bounce_count += 10
 
-        if (self.jump + self.yspd >= 0 and self.bounce_count > 100):
-            self.bounce = False
-            self.bounce_count = 0
+            if (self.jump + self.yspd >= 0 and self.bounce_count > 100):
+                self.bounce = False
+                self.bounce_count = 0
 
-        self.pos = (self.x, self.y)
+            self.pos = (self.x, self.y)
 
     def player_fall(self, spd, grounds, moving_grounds):
         self.fall = True
@@ -82,8 +82,8 @@ class player(sprite):
             #self.jump += 0.5
             self.pos = (self.x, self.y)
 
-    def player_jump(self, pressedKey, grounds, moving_grounds):
-        if (self.jump == 0 and self.fall == False and self.swim == False and self.bounce == False and pressedKey[pygame.K_SPACE]):
+    def player_jump(self, pressedKey, grounds, moving_grounds, conversation):
+        if (self.jump == 0 and self.fall == False and self.swim == False and self.bounce == False and conversation.dialogueLEVEL == -1 and pressedKey[pygame.K_SPACE]):
             self.jump = -24
             return True
 
@@ -108,10 +108,15 @@ class player(sprite):
                     break
 
             if (self.swim == True):
+                self.player_swim_anim()
+                self.dir = 0
+                self.dir1 = 0
                 if (pressedKey[pygame.K_w]):
                     self.y -= self.yspd
+                    self.dir1 = -1
                 if (pressedKey[pygame.K_s]):
                     self.y += self.yspd
+                    self.dir1 = 1
                 if (pressedKey[pygame.K_a]):
                     self.x -= self.xspd
                     self.dir = -1
@@ -145,9 +150,9 @@ class player(sprite):
         for i in range(len(items)):
             items[i].interact(pressedKey, self)
 
-    def player_attack(self, pressedKey, section):
+    def player_attack(self, pressedKey, section, conversation):
         self.end_attack = pygame.time.get_ticks()
-        if (pressedKey[pygame.K_r]):
+        if (pygame.mouse.get_pressed()[0] == 1 and conversation.dialogueLEVEL == -1):
             if (self.normal_active == False):
                 self.normal_active = True
                 self.start_attack = pygame.time.get_ticks()
@@ -165,8 +170,8 @@ class player(sprite):
                 self.attack_typ = -1
 
 
-    def player_skill(self, pressedKey, paint):
-        if (pressedKey[pygame.K_q] and paint.amount > 0):
+    def player_skill(self, pressedKey, paint, conversation):
+        if (pygame.mouse.get_pressed()[2] == 1 and conversation.dialogueLEVEL == -1 and paint.amount > 0):
             if (self.skill_active == False):
                 self.attack = True
                 paint.dec_bar(10) # can change value
@@ -227,12 +232,11 @@ class player(sprite):
         if self.att_imagecounter >= 30:
             self.att_imagecounter = 0
 
-        self.surface = pygame.image.load('media/enemy_att_0' + str(int(self.att_imagecounter / 10)) + '.png').convert_alpha()
+        self.surface = pygame.image.load('media/anna_attack_0' + str(int(self.att_imagecounter / 10)) + '.png').convert_alpha()
         if (self.dir == 1):
             self.surface = pygame.transform.flip(self.surface, 1, 0)
         else:
             self.surface = pygame.transform.flip(self.surface, 0, 0)
-
 
 
     def player_swim_anim(self):
@@ -240,8 +244,12 @@ class player(sprite):
         if self.swim_imagecounter >= 40:
             self.swim_imagecounter = 0
 
-        self.surface = pygame.image.load('media/enemy_die_0' + str(int(self.swim_imagecounter / 10)) + '.png').convert_alpha()
+        self.surface = pygame.image.load('media/anna_swim_0' + str(int(self.swim_imagecounter / 10)) + '.png').convert_alpha()
 
+        if (self.dir == 1):
+            self.surface = pygame.transform.flip(self.surface, 0, 0)
+        else:
+            self.surface = pygame.transform.flip(self.surface, 1, 0)
 
 
 class enemy(sprite):

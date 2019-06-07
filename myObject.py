@@ -61,7 +61,6 @@ class drawing_piece(interactive_object):
         if (self.checkcollision(self, player)):
             self.setPos(-10000, -10000)
             self.collect = True
-            print('Yes')
 
 
 class gate(interactive_object):
@@ -184,7 +183,7 @@ class brush(sprite):
 class throw_stuff(sprite):
     def __init__(self, typ = 0, direction = 1):  # add frames input
         sprite.__init__(self, 0, 0)
-        self.xspd = 10
+        self.xspd = 15
         self.yspd = -15
         self.dir = direction
         self.turn = 1
@@ -193,6 +192,7 @@ class throw_stuff(sprite):
         if (self.typ < 2):
             self.width = 10
             self.height = 10
+            self.xspd = 20
             self.yspd = 0
         else:
             self.width = 80

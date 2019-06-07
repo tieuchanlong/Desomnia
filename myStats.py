@@ -27,7 +27,6 @@ class paint_bar(sprite):
         self.surface = pygame.image.load('media/paintbar_05.png').convert_alpha()
 
     def dec_bar(self, amount):
-        print('Player ' + str(self.amount))
         if (self.amount > 0 and self.amount < 50):
             self.amount -= amount
 

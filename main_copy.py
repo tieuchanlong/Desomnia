@@ -2243,7 +2243,7 @@ while running:
         if (section_area == 15 and scenechange == -1):
             section8_gameplay()
 
-    if pressedKey[pygame.K_TAB]:
+    if pressedKey[pygame.K_TAB] and scenechange == -1:
         pauselevel = 1
     if pauselevel == 1:
         screen.fill(BLACK)
@@ -2278,6 +2278,9 @@ while running:
             cutscene15()
         if start_ticks / 1000 > 61.10:
             screen.fill(BLACK)
+
+    # --------- Instructions section ------------- #
+
 
     scene_change()
     pygame.display.update()

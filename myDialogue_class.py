@@ -49,7 +49,7 @@ class dialogue():
             self.dialogue_unlocked.append(False)
 
     def dialogue0(self, screen):
-        rcdialogue1 = text(100, 70, "Lady! Help is needed over here!", 30, "Renogare", WHITE)
+        rcdialogue1 = text(100, 70, "Talkative Creature: Young lady! Why are you wandering around here?", 30, "Renogare", WHITE)
         x = 50 + self.dialogueboxload.get_width() / 2 - rcdialogue1.getText().get_width() / 2
         y = 10 + self.dialogueboxload.get_height() / 2 - rcdialogue1.getText().get_height() / 2
         rcdialogue1.textsetpos(x, y)
@@ -58,7 +58,7 @@ class dialogue():
         screen.blit(rcdialogue1.getText(), rcdialogue1.gettextpos())
 
     def dialogue1(self, screen):
-        andialogue1 = text(410, 70, "You can talk !?", 30, "Renogare", WHITE)
+        andialogue1 = text(410, 70, "Anna: You can talk !?", 30, "Renogare", WHITE)
         x = 50 + self.dialogueboxload.get_width() / 2 - andialogue1.getText().get_width() / 2
         y = 10 + self.dialogueboxload.get_height() / 2 - andialogue1.getText().get_height() / 2
         andialogue1.textsetpos(x, y)
@@ -67,12 +67,12 @@ class dialogue():
         screen.blit(andialogue1.getText(), andialogue1.gettextpos())
 
     def dialogue2(self, screen):
-        rcdialogue2 = text(320, 60, "Creatures that can talk are not hostile", 30, "Renogare", WHITE)
+        rcdialogue2 = text(320, 60, "Talkative Creature: You find that strange?", 30, "Renogare", WHITE)
         x = 50 + self.dialogueboxload.get_width() / 2 - rcdialogue2.getText().get_width() / 2
         y = self.dialogueboxload.get_height() / 2 - rcdialogue2.getText().get_height() / 2
         rcdialogue2.textsetpos(x, y)
 
-        rcdialogue2a = text(420, 85, "as you think it is.", 30, "Renogare", WHITE)
+        rcdialogue2a = text(420, 85, "Maybe it is...", 30, "Renogare", WHITE)
         x = 50 + self.dialogueboxload.get_width() / 2 - rcdialogue2a.getText().get_width() / 2
         y = 23 + self.dialogueboxload.get_height() / 2 - rcdialogue2a.getText().get_height() / 2
         rcdialogue2a.textsetpos(x, y)
@@ -82,7 +82,7 @@ class dialogue():
         screen.blit(rcdialogue2a.getText(), rcdialogue2a.gettextpos())
 
     def dialogue3(self, screen):
-        andialogue2 = text(320, 70, "So why are you different than others?", 30, "Renogare", WHITE)
+        andialogue2 = text(320, 70, "Anna: So why are you different than others?", 30, "Renogare", WHITE)
         x = 50 + self.dialogueboxload.get_width() / 2 - andialogue2.getText().get_width() / 2
         y = 10 + self.dialogueboxload.get_height() / 2 - andialogue2.getText().get_height() / 2
         andialogue2.textsetpos(x, y)
@@ -91,12 +91,12 @@ class dialogue():
         screen.blit(andialogue2.getText(), andialogue2.gettextpos())
 
     def dialogue4(self, screen):
-        rcdialogue3 = text(360, 60, "It was a long story.", 30, "Renogare", WHITE)
+        rcdialogue3 = text(360, 60, "Talkative Creature: It is a long story...", 30, "Renogare", WHITE)
         x = 50 + self.dialogueboxload.get_width() / 2 - rcdialogue3.getText().get_width() / 2
         y = self.dialogueboxload.get_height() / 2 - rcdialogue3.getText().get_height() / 2
         rcdialogue3.textsetpos(x, y)
 
-        rcdialogue3a = text(420, 85, "that I don't even remember", 30, "Renogare", WHITE)
+        rcdialogue3a = text(420, 85, "...that I don't even remember", 30, "Renogare", WHITE)
         x = 50 + self.dialogueboxload.get_width() / 2 - rcdialogue3a.getText().get_width() / 2
         y = 23 + self.dialogueboxload.get_height() / 2 - rcdialogue3a.getText().get_height() / 2
         rcdialogue3a.textsetpos(x, y)
@@ -108,7 +108,7 @@ class dialogue():
     ### after returning ###
 
     def dialogue5(self, screen):
-        rcdialogue4 = text(350, 30, "Oh, you're still here?", 30, "Renogare", WHITE)
+        rcdialogue4 = text(350, 30, "Talkative Creature: Be safe out there!", 30, "Renogare", WHITE)
         x = 50 + self.dialogueboxload.get_width() / 2 - rcdialogue4.getText().get_width() / 2
         y = 10 + self.dialogueboxload.get_height() / 2 - rcdialogue4.getText().get_height() / 2
         rcdialogue4.textsetpos(x, y)
@@ -212,7 +212,7 @@ class dialogue():
         screen.blit(unk3.getText(), unk3.gettextpos())
 
     def dialogue22(self, screen):
-        nodi3 = text(350, 30, "(The creature handed you a piece of drawing)", 30, "Renogare", WHITE)
+        nodi3 = text(350, 30, "(The creature open the waterway for Anna)", 30, "Renogare", WHITE)
         x = 50 + self.dialogueboxload.get_width() / 2 - nodi3.getText().get_width() / 2
         y = 10 + self.dialogueboxload.get_height() / 2 - nodi3.getText().get_height() / 2
         nodi3.textsetpos(x, y)
@@ -222,6 +222,16 @@ class dialogue():
 
     def dialogue23(self, screen):
         nodi3 = text(350, 30, "Creature: Umu...", 30, "Renogare", WHITE)
+        x = 50 + self.dialogueboxload.get_width() / 2 - nodi3.getText().get_width() / 2
+        y = 10 + self.dialogueboxload.get_height() / 2 - nodi3.getText().get_height() / 2
+        nodi3.textsetpos(x, y)
+        self.start = False
+
+        screen.blit(self.dialogueboxload, (50, 10))
+        screen.blit(nodi3.getText(), nodi3.gettextpos())
+
+    def dialogue24(self, screen):
+        nodi3 = text(350, 30, "Creature: Umu! Umu!", 30, "Renogare", WHITE)
         x = 50 + self.dialogueboxload.get_width() / 2 - nodi3.getText().get_width() / 2
         y = 10 + self.dialogueboxload.get_height() / 2 - nodi3.getText().get_height() / 2
         nodi3.textsetpos(x, y)
@@ -275,15 +285,6 @@ class dialogue():
         screen.blit(self.dialogueboxload, (50, 10))
         screen.blit(noti5.getText(), noti5.gettextpos())
 
-    def playerflowernoti5(self, screen):
-        noti5 = text(350, 30, "Now I should get back to help him", 30, "Renogare", WHITE)
-        x = 50 + self.dialogueboxload.get_width() / 2 - noti5.getText().get_width() / 2
-        y = 10 + self.dialogueboxload.get_height() / 2 - noti5.getText().get_height() / 2
-        noti5.textsetpos(x, y)
-
-        screen.blit(self.dialogueboxload, (50, 10))
-        screen.blit(noti5.getText(), noti5.gettextpos())
-
     def npctalk(self, screen):
         npc = text(350, 30, "Wreeegghhh...", 30, "Renogare", WHITE)
         x = 50 + self.dialogueboxload.get_width() / 2 - npc.getText().get_width() / 2
@@ -293,8 +294,17 @@ class dialogue():
         screen.blit(self.dialogueboxload, (50, 10))
         screen.blit(npc.getText(), npc.gettextpos())
 
-    def bosstalk(self, screen):
+    def dialogue25(self, screen):
         boss = text(350, 30, "Wraaagghhh!!!", 30, "Renogare", WHITE)
+        x = 50 + self.dialogueboxload.get_width() / 2 - boss.getText().get_width() / 2
+        y = 10 + self.dialogueboxload.get_height() / 2 - boss.getText().get_height() / 2
+        boss.textsetpos(x, y)
+
+        screen.blit(self.dialogueboxload, (50, 10))
+        screen.blit(boss.getText(), boss.gettextpos())
+
+    def dialogue26(self, screen):
+        boss = text(350, 30, "Woah!! What is that?", 30, "Renogare", WHITE)
         x = 50 + self.dialogueboxload.get_width() / 2 - boss.getText().get_width() / 2
         y = 10 + self.dialogueboxload.get_height() / 2 - boss.getText().get_height() / 2
         boss.textsetpos(x, y)
@@ -307,34 +317,31 @@ class dialogue():
         mousepressed = pygame.mouse.get_pressed()
         if self.dialogueLEVEL == 0:
             self.dialogue0(screen)
+            self.dialogue_unlocked[0] = True
             if (mousepressed[0] == 1 or mousepressed[1] == 1 or mousepressed[2] == 1) and self.endtime - self.starttime > 1000:
                self.starttime = pygame.time.get_ticks()
                self.dialogueLEVEL = 1
         if self.dialogueLEVEL == 1:
             self.dialogue1(screen)
-            if pressedKeys[pygame.K_1] and self.endtime - self.starttime > 1000:
+            if (mousepressed[0] == 1 or mousepressed[1] == 1 or mousepressed[2] == 1) and self.endtime - self.starttime > 1000:
                self.starttime = pygame.time.get_ticks()
                self.dialogueLEVEL = 2
         if self.dialogueLEVEL == 2:
             self.dialogue2(screen)
-            if pressedKeys[pygame.K_1] and self.endtime - self.starttime > 1000:
+            if (mousepressed[0] == 1 or mousepressed[1] == 1 or mousepressed[2] == 1) and self.endtime - self.starttime > 1000:
                 self.starttime = pygame.time.get_ticks()
                 self. dialogueLEVEL = 3
         if self.dialogueLEVEL == 3:
             self.dialogue3(screen)
-            if pressedKeys[pygame.K_1] and self.endtime - self.starttime > 1000:
+            if (mousepressed[0] == 1 or mousepressed[1] == 1 or mousepressed[2] == 1) and self.endtime - self.starttime > 1000:
                self.starttime = pygame.time.get_ticks()
                self.dialogueLEVEL = 4
         if self.dialogueLEVEL == 4:
             self.dialogue4(screen)
-            if pressedKeys[pygame.K_1] and self.endtime - self.starttime > 1000:
+            if (mousepressed[0] == 1 or mousepressed[1] == 1 or mousepressed[2] == 1) and self.endtime - self.starttime > 1000:
                self.starttime = pygame.time.get_ticks()
-               self.dialogueLEVEL = 5
-        if self.dialogueLEVEL == 5:
-            self.dialogue5(screen)
-            if pressedKeys[pygame.K_1] and self.endtime - self.starttime > 1000:
-               self.starttime = pygame.time.get_ticks()
-            self.dialogueLEVEL = -1
+               self.dialogueLEVEL = -1
+               self.start = False
 
     def conv2(self, pressedKeys, screen):
         self.endtime = pygame.time.get_ticks()
@@ -394,10 +401,12 @@ class dialogue():
             if (mousepressed[0] == 1 or mousepressed[1] == 1 or mousepressed[2] == 1) and self.endtime - self.starttime > 1000:
                 self.starttime = pygame.time.get_ticks()
                 self.dialogueLEVEL = -1
+                self.start = False
 
     def conv4(self, pressedKeys, screen):
         if self.dialogueLEVEL == 121:  # 121 is a new level because the text is new
             self.playerflowernoti2(screen)
+            self.dialogue_unlocked[121] = True
             if pressedKeys[pygame.K_1] and self.endtime - self.starttime > 1000:
                 self.starttime = pygame.time.get_ticks()
                 self.dialogueLEVEL = 122
@@ -415,32 +424,40 @@ class dialogue():
             self.dialogue22(screen)
             if pressedKeys[pygame.K_1] and self.endtime - self.starttime > 1000:
                 self.starttime = pygame.time.get_ticks()
-                self.dialogueLEVEL = 23
-    '''
-    def flowernoti(self):
-        if self.flower == 2:
-            playerflowernoti()
-            if pressedKeys[pygame.K_1] and endtime - self.starttime > 1000:
-                self.starttime = pygame.time.get_ticks()
-                self.dialogueLEVEL = 600
-        if self.flower == 1 and self.dialogueLEVEL == 600:
-            playerflowernoti1()
-            if pressedKeys[pygame.K_1] and endtime - self.starttime > 1000:
-                self.starttime = pygame.time.get_ticks()
-    '''
+                self.dialogueLEVEL = -1
+                self.start = False
 
-    '''
-    def npcint(self):
+    def conv5(self, pressedKeys, screen):
+        self.endtime = pygame.time.get_ticks()
+        mousepressed = pygame.mouse.get_pressed()
         if self.dialogueLEVEL == 24:
-            npctalk()
-            if pressedKeys[pygame.K_1] and endtime - self.starttime > 1000:
-               self.starttime = pygame.time.get_ticks()
-               self.dialogueLEVEL = 25
+            self.dialogue24(screen)
+            if (mousepressed[0] == 1 or mousepressed[1] == 1 or mousepressed[2] == 1) and self.endtime - self.starttime > 1000:
+                self.starttime = pygame.time.get_ticks()
+                self.dialogueLEVEL = -1
+                self.start = False
 
-    def bossint(self):
-        if self.dialogueLEVEL == 24:
-            bosstalk()
-            if pressedKeys[pygame.K_1] and endtime - self.starttime > 1000:
-               self.starttime = pygame.time.get_ticks()
-               self.dialogueLEVEL = 25'''
+    def conv6(self, pressedKeys, screen):
+        self.endtime = pygame.time.get_ticks()
+        mousepressed = pygame.mouse.get_pressed()
+        if self.dialogueLEVEL == 6:
+            self.dialogue5(screen)
+            if (mousepressed[0] == 1 or mousepressed[1] == 1 or mousepressed[2] == 1) and self.endtime - self.starttime > 1000:
+                self.starttime = pygame.time.get_ticks()
+                self.dialogueLEVEL = -1
+                self.start = False
+
+    def conv7(self, pressedKeys, screen):
+        mousepressed = pygame.mouse.get_pressed()
+        if self.dialogueLEVEL == 25:  # 121 is a new level because the text is new
+            self.dialogue25(screen)
+            self.dialogue_unlocked[25] = True
+            if (mousepressed[0] == 1 or mousepressed[1] == 1 or mousepressed[2] == 1) and self.endtime - self.starttime > 1000:
+                self.starttime = pygame.time.get_ticks()
+                self.dialogueLEVEL = 26
+        if self.dialogueLEVEL == 26:
+            self.dialogue26(screen)
+            if (mousepressed[0] == 1 or mousepressed[1] == 1 or mousepressed[2] == 1) and self.endtime - self.starttime > 1000:
+                self.starttime = pygame.time.get_ticks()
+                self.dialogueLEVEL = -1
 

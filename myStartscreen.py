@@ -35,7 +35,7 @@ imagecounter = -1
 
 for i in range(356):
     imagecounter += 1
-    screenimage.append("media/startscreen - image" + str(imagecounter) + ".jpg")
+    screenimage.append("media/startscreen/startscreen/startscreen - image" + str(imagecounter) + ".jpg")
 
 screenimageload = []
 for i in range(356):

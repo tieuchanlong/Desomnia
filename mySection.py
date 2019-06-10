@@ -23,6 +23,7 @@ class section:
 
     def move_x(self, distance):
         self.saving_point.setPos(self.saving_point.x + distance, self.saving_point.y)
+        self.saving_point.note.setPos(self.saving_point.note.x + distance, self.saving_point.note.y)
 
         for i in range(len(self.backgrounds)):
             self.backgrounds[i].setPos(self.backgrounds[i].x + distance, self.saving_point.y)
@@ -42,15 +43,19 @@ class section:
 
         for i in range(len(self.items)):
             self.items[i].setPos(self.items[i].x + distance, self.items[i].y)
+            self.items[i].note.setPos(self.items[i].note.x + distance, self.items[i].note.y)
 
         for i in range(len(self.instruction_points)):
             self.instruction_points[i].setPos(self.instruction_points[i].x + distance, self.instruction_points[i].y)
+            self.instruction_points[i].note.setPos(self.instruction_points[i].note.x + distance, self.instruction_points[i].note.y)
 
         for i in range(len(self.gates)):
             self.gates[i].setPos(self.gates[i].x + distance, self.gates[i].y)
+            self.gates[i].note.setPos(self.gates[i].note.x + distance, self.gates[i].note.y)
 
         for i in range(len(self.control_panels)):
             self.control_panels[i].setPos(self.control_panels[i].x + distance, self.control_panels[i].y)
+            self.control_panels[i].note.setPos(self.control_panels[i].note.x + distance, self.control_panels[i].note.y)
 
         for i in range(len(self.bullets)):
             self.bullets[i].setPos(self.bullets[i].x + distance, self.bullets[i].y)
@@ -60,6 +65,7 @@ class section:
 
         for i in range(len(self.npc)):
             self.npc[i].setPos(self.npc[i].x + distance, self.npc[i].y)
+            self.npc[i].note.setPos(self.npc[i].note.x + distance, self.npc[i].note.y)
 
         for i in range(len(self.moving_npc)):
             self.moving_npc[i].setPos(self.moving_npc[i].x + distance, self.moving_npc[i].y)
@@ -80,6 +86,7 @@ class section:
 
     def move_y(self, distance):
         self.saving_point.setPos(self.saving_point.x, self.saving_point.y + distance)
+        self.saving_point.note.setPos(self.saving_point.note.x, self.saving_point.note.y + distance)
 
         for i in range(len(self.backgrounds)):
             self.backgrounds[i].setPos(self.backgrounds[i].x, self.saving_point.y + distance)
@@ -97,15 +104,19 @@ class section:
 
         for i in range(len(self.items)):
             self.items[i].setPos(self.items[i].x, self.items[i].y + distance)
+            self.items[i].note.setPos(self.items[i].note.x, self.items[i].note.y + distance)
 
         for i in range(len(self.instruction_points)):
             self.instruction_points[i].setPos(self.instruction_points[i].x, self.instruction_points[i].y + distance)
+            self.instruction_points[i].note.setPos(self.instruction_points[i].note.x, self.instruction_points[i].note.y + distance)
 
         for i in range(len(self.gates)):
             self.gates[i].setPos(self.gates[i].x, self.gates[i].y + distance)
+            self.gates[i].note.setPos(self.gates[i].note.x, self.gates[i].note.y + distance)
 
         for i in range(len(self.control_panels)):
             self.control_panels[i].setPos(self.control_panels[i].x, self.control_panels[i].y + distance)
+            self.control_panels[i].note.setPos(self.control_panels[i].note.x, self.control_panels[i].note.y + distance)
 
         for i in range(len(self.bullets)):
             self.bullets[i].setPos(self.bullets[i].x, self.bullets[i].y + distance)
@@ -115,6 +126,7 @@ class section:
 
         for i in range(len(self.npc)):
             self.npc[i].setPos(self.npc[i].x, self.npc[i].y + distance)
+            self.npc[i].note.setPos(self.npc[i].note.x, self.npc[i].note.y + distance)
 
         for i in range(len(self.moving_npc)):
             self.moving_npc[i].setPos(self.moving_npc[i].x, self.moving_npc[i].y + distance)

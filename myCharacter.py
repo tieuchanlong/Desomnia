@@ -1,6 +1,6 @@
 from myParentclass import *
 from myObject import *
-from myDialogue import *
+from myDialogue_class import *
 import pygame
 
 WIDTH = 900
@@ -33,11 +33,14 @@ class player(sprite):
         self.idl_imagecounter = -1
         self.walk_imagecounter = -1
         self.swim_imagecounter = -1
-        self.drawings = text(WIDTH - 30, 20, '0', 40, "Renogare", (255, 255, 255))
-        self.drawing_UI = image('media/star.png', WIDTH - 100, 10, 50, 50)
+        self.drawings = text(WIDTH - 60, 20, '0/10', 40, "Renogare", (255, 255, 255))
+        self.drawing_UI = image('media/star.png', WIDTH - 130, 10, 50, 50)
         self.coins = text(WIDTH - 30, 100, '0', 40, "Renogare", (255, 255, 255))
         self.coin_UI = image('media/coin00.png', WIDTH - 100, 90, 50, 50)
         self.coin_UI.surface = pygame.transform.scale(self.coin_UI.surface, (40, 40))
+        self.flowers_text = text(WIDTH - 40, 180, '0', 40, "Renogare", (255, 255, 255))
+        self.flower_UI = image('media/flower.png', WIDTH - 100, 170, 50, 50)
+        self.flower_UI.surface = pygame.transform.scale(self.coin_UI.surface, (40, 40))
 
     def playerMove(self, pressedKey, spd, conversation):
             if (self.bounce == False):
@@ -58,6 +61,13 @@ class player(sprite):
             if (self.jump + self.yspd >= 0 and self.bounce_count > 100):
                 self.bounce = False
                 self.bounce_count = 0
+
+            if (self.walk_imagecounter == 0 and self.fall == False and self.jump == 0):
+                pygame.mixer.Channel(1).play(pygame.mixer.Sound('media/run.wav'), 1)
+                pygame.mixer.Channel(1).set_volume(0.1)
+
+            if (self.walk_imagecounter == -1 or self.jump + self.yspd < 0 or self.fall == True):
+                pygame.mixer.Channel(1).pause()
 
             self.pos = (self.x, self.y)
 
@@ -108,6 +118,10 @@ class player(sprite):
                     break
 
             if (self.swim == True):
+                if pygame.mixer.Channel(2).get_busy() == False:
+                    pygame.mixer.Channel(2).play(pygame.mixer.Sound('media/swim.wav'), 1)
+                    pygame.mixer.Channel(2).set_volume(0.2)
+
                 self.player_swim_anim()
                 self.dir = 0
                 self.dir1 = 0
@@ -135,6 +149,9 @@ class player(sprite):
                 if (pressedKey[pygame.K_SPACE]):
                     self.jump = -30
                     self.swim = False
+            else:
+                pygame.mixer.Channel(2).stop()
+
         else:
             self.x += 20 * self.dir
             self.bounce_count += 20
@@ -154,6 +171,10 @@ class player(sprite):
         self.end_attack = pygame.time.get_ticks()
         if (pygame.mouse.get_pressed()[0] == 1 and conversation.dialogueLEVEL == -1):
             if (self.normal_active == False):
+                if pygame.mixer.Channel(5).get_busy() == False:
+                    pygame.mixer.Channel(5).play(pygame.mixer.Sound('media/attack.wav'), 0)
+                    pygame.mixer.Channel(5).set_volume(0.2)
+
                 self.normal_active = True
                 self.start_attack = pygame.time.get_ticks()
                 self.attack_typ = (self.attack_typ + 1) % 3
@@ -402,8 +423,6 @@ class enemy(sprite):
     def enemy_die(self):
         if (self.hp == 0):
             self.enemy_die_anim()
-            if (self.die_imagecounter >= 40):
-                self.setPos(-10000, -10000)
 
     def enemy_idle_anim(self):
         self.idl_imagecounter += 1
@@ -438,13 +457,12 @@ class enemy(sprite):
     def enemy_die_anim(self):
         self.die_imagecounter += 1
 
-        if self.att_imagecounter >= 40:
+        if self.die_imagecounter >= 40:
             self.die_imagecounter = 0
-            self.surface = pygame.image.load('media/enemy_die_00.png').convert_alpha()
-            self.surface = pygame.transform.scale(self.surface, (40, 40))
-        else:
-            self.surface = pygame.image.load('media/enemy_die_0' + str(int(self.die_imagecounter / 10)) + '.png').convert_alpha()
-            self.surface = pygame.transform.scale(self.surface, (40, 40))
+            self.setPos(-10000, -10000)
+
+        self.surface = pygame.image.load('media/enemy_die_0' + str(int(self.die_imagecounter / 10)) + '.png').convert_alpha()
+        self.surface = pygame.transform.scale(self.surface, (40, 40))
 
 
 class jumping_enemy(enemy):
@@ -528,7 +546,7 @@ class jumping_enemy(enemy):
 
 class shooting_enemy(sprite):
     def __init__(self, width, height, x=0, y=0):
-        sprite.__init__(self, x, y)
+        sprite.__init__(self, x, y - 10)
         self.width = width
         self.height = height
         self.dim = (self.width, self.height)
@@ -543,6 +561,7 @@ class shooting_enemy(sprite):
         self.attack = False
         self.stun = False
         self.hit = 0
+        self.idl_imagecounter = -1
 
 
     def enemy_follow(self, player, section):
@@ -555,6 +574,7 @@ class shooting_enemy(sprite):
                 self.attack = False
 
             if (self.attack == True):
+                self.enemy_att_anim()
                 if (self.x > player.x):
                     self.dir = -1
                     # load turn back animation
@@ -565,19 +585,51 @@ class shooting_enemy(sprite):
                 if (self.end_shoot - self.start_shoot >= 2000):
                     # load shoot animation
                     self.start_shoot = pygame.time.get_ticks()
-                    section.bullets.append(bullet(10, 10, self.x + self.width/2, self.y, self.dir))
+                    section.bullets.append(bullet(30, 30, self.x + self.width/2, self.y, self.dir))
+            else:
+                self.enemy_idle_anim()
         else:
             self.hit += 5
             if (self.hit > 600):
                 self.hit = 0
                 self.stun = False
 
+    def enemy_idle_anim(self):
+        self.idl_imagecounter += 1
+        self.att_imagecounter = -1
+
+        if self.idl_imagecounter >= 10:
+            self.idl_imagecounter = 0
+
+        self.surface = pygame.image.load('media/shoot_idle0' + str(int(self.idl_imagecounter / 5)) + '.png').convert_alpha()
+        self.surface = pygame.transform.scale(self.surface, (80, 80))
+
+        if (self.dir == -1):
+            self.surface = pygame.transform.flip(self.surface, 1, 0)
+        else:
+            self.surface = pygame.transform.flip(self.surface, 0, 0)
+
+    def enemy_att_anim(self):
+        self.att_imagecounter += 1
+        self.idl_imagecounter = -1
+
+        if self.att_imagecounter >= 20:
+            self.att_imagecounter = 0
+
+        self.surface = pygame.image.load('media/shoot_attack0' + str(int(self.att_imagecounter / 5)) + '.png').convert_alpha()
+        self.surface = pygame.transform.scale(self.surface, (80, 80))
+
+        if (self.dir == -1):
+            self.surface = pygame.transform.flip(self.surface, 1, 0)
+        else:
+            self.surface = pygame.transform.flip(self.surface, 0, 0)
+
 class boss(enemy):
     def __init__(self, width, height, x=0, y=0):
         enemy.__init__(self, width, height, x, y)
         self.jump = 0
         self.rad_vision = WIDTH
-        self.attack_typ = 0
+        self.attack_typ = -1
         self.start_attack = 0
         self.end_attack = 0
         self.dir = 1
@@ -607,7 +659,7 @@ class boss(enemy):
             if (self.end_attack - self.start_attack >= 10000):
                 if (self.attack_typ == 0):
                     for i in range(20):
-                        self.rocks.append(rock(50, 50, self))
+                        self.rocks.append(rock(100, 100, self))
                         while True:
                             check = False
                             for j in range(len(self.rocks)-1):
@@ -679,7 +731,21 @@ class boss(enemy):
             self.surface = pygame.transform.flip(self.surface, False, False)
 
 
+    def boss_idle_ani(self):
+        self.idl_imagecounter += 1
+        self.att_imagecounter = -1
+        self.angry_imagecounter = -1
+        self.die_imagecounter = -1
+
+        if self.idl_imagecounter >= 10:
+            self.idl_imagecounter = 0
+
+        self.surface = pygame.image.load('media/boss_attack0' + str(int(self.angry_imagecounter / 5)) + '.png').convert_alpha()
+        self.surface = pygame.transform.scale(self.surface, (self.width, self.height))
+
+
     def boss_angry_ani(self):
+        self.idl_imagecounter = -1
         self.att_imagecounter = -1
         self.angry_imagecounter += 1
         self.die_imagecounter = -1
@@ -693,6 +759,7 @@ class boss(enemy):
     def boss_die_ani(self):
         self.att_imagecounter = -1
         self.angry_imagecounter = -1
+        self.idl_imagecounter = -1
         self.die_imagecounter += 1
 
         if self.die_imagecounter >= 60:
@@ -721,11 +788,19 @@ class npc(sprite):
         self.talk = False
         self.rad_vision = 20 # the range of vision for enemy
         self.imagecounter = -1
+        self.trouble_imagecounter = -1
+        self.happy_imagecounter = -1
+        self.talk_imagecounter = -1
+        self.note_appear = False
+        self.note = image('media/interact.png', self.x + 10, self.y - 50, 80, 50)
 
     def npc_talk(self, pressedKey, player):
         if (abs(player.x - self.x) <= 150):
+            self.note_appear = True
             if (pressedKey[pygame.K_e]):
                 self.talk = True
+        else:
+            self.note_appear = False
 
     def npc_idle(self):
         self.imagecounter += 1
@@ -734,6 +809,45 @@ class npc(sprite):
 
         self.surface = pygame.image.load('media/npc_idle_0' + str(int(self.imagecounter/10)) + '.png').convert_alpha()
         if (self.dir == 1):
+            self.surface = pygame.transform.flip(self.surface, 1, 0)
+        else:
+            self.surface = pygame.transform.flip(self.surface, 0, 0)
+
+    def trouble_npc_anim(self, player):
+        self.trouble_imagecounter += 1
+        if self.trouble_imagecounter >= 20:
+            self.trouble_imagecounter = 0
+
+        self.surface = pygame.image.load('media/beast_idle0' + str(int(self.trouble_imagecounter / 10)) + '.png').convert_alpha()
+        self.surface = pygame.transform.scale(self.surface, (150, 150))
+
+        if (player.x + player.width <= self.x + self.width/2 == 1):
+            self.surface = pygame.transform.flip(self.surface, 1, 0)
+        else:
+            self.surface = pygame.transform.flip(self.surface, 0, 0)
+
+    def happy_npc_anim(self, player):
+        self.happy_imagecounter += 1
+        if self.happy_imagecounter >= 20:
+            self.happy_imagecounter = 0
+
+        self.surface = pygame.image.load('media/beast_happy0' + str(int(self.happy_imagecounter / 10)) + '.png').convert_alpha()
+        self.surface = pygame.transform.scale(self.surface, (150, 150))
+
+        if (player.x + player.width <= self.x + self.width / 2 == 1):
+            self.surface = pygame.transform.flip(self.surface, 1, 0)
+        else:
+            self.surface = pygame.transform.flip(self.surface, 0, 0)
+
+    def talk_npc_anim(self, player):
+        self.talk_imagecounter += 1
+        if self.talk_imagecounter >= 20:
+            self.talk_imagecounter = 0
+
+        self.surface = pygame.image.load('media/trouble_npc_0' + str(int(self.talk_imagecounter / 5)) + '.png').convert_alpha()
+        self.surface = pygame.transform.scale(self.surface, (80, 80))
+
+        if (player.x + player.width <= self.x + self.width/2 == 1):
             self.surface = pygame.transform.flip(self.surface, 1, 0)
         else:
             self.surface = pygame.transform.flip(self.surface, 0, 0)

@@ -183,5 +183,5 @@ class water(sprite):
         self.dim = (self.width, self.height)
         self.typ = random.randrange(3)
         self.surface = pygame.Surface(self.dim, pygame.SRCALPHA, 32)
-        self.surface = pygame.image.load('media/waterbackground02.png').convert_alpha()
+        self.surface = pygame.image.load('media/waterbackground6000.png').convert_alpha()
         self.surface = pygame.transform.scale(self.surface, (width, height))

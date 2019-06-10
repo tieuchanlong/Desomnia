@@ -7,13 +7,17 @@ class save_point(interactive_object):
         self.org_x = x
         self.org_y = y - 20
         self.imagecounter = -1
+        self.note = image('media/interact.png', self.x, self.y - 50, 80, 50)
 
     def save_game(self, pressedKey, player, section):
         # save game
         if (abs(player.x - self.x) <= 100):
+            self.note_appear = True
             if (pressedKey[pygame.K_e]):
                 self.setColor((255, 255, 0))
                 return 1, (section, self.org_x, self.org_y + self.height - player.height)
+        else:
+            self.note_appear = False
 
         return 0, (-10, 0, 0)
 
@@ -31,31 +35,38 @@ class instruction_point(interactive_object):
         interactive_object.__init__(self, width, height, x, y)
         self.area = ar
         self.surface = pygame.image.load('media/board.png').convert_alpha()
+        self.note = image('media/interact.png', self.x, self.y - 50, 80, 50)
 
     def interact(self, pressedKey, player):
         # Add some interaction
         if (abs(player.x - self.x) <= 100):
-            if (pressedKey[pygame.K_e]):
-                # Add instructions
-                return
+            self.note_appear = True
+        else:
+            self.note_appear = False
 
 class control_panel(interactive_object):
     def __init__(self, width, height, x=0, y=0):
         interactive_object.__init__(self, width, height, x, y)
         self.active = False
+        self.note = image('media/interact.png', self.x - 20, self.y - 50, 80, 50)
 
 
     def interact(self, pressedKey, player):
         if (abs(player.x - self.x) <= 100):
+            self.note_appear = True
+            #screen.blit(self.note.getSurface(), self.note.getPos())
             if (pressedKey[pygame.K_e]):
                 self.setColor((255, 255, 0))
                 self.active = True
+        else:
+            self.note_appear = True
 
 class drawing_piece(interactive_object):
     def __init__(self, width, height, x=0, y=0):
         interactive_object.__init__(self, width, height, x, y)
         self.surface = pygame.image.load('media/star.png').convert_alpha()
         self.surface = pygame.transform.scale(self.surface, (30, 30))
+        self.note = image('media/interact.png', self.x - 20, self.y - 50, 80, 50)
 
     def interact(self, pressedKey, player):
         if (self.checkcollision(self, player)):
@@ -68,13 +79,18 @@ class gate(interactive_object):
         interactive_object.__init__(self, width, height, x, y)
         self.active = False
         self.surface = pygame.image.load('media/door.png').convert_alpha()
+        self.note = image('media/interact.png', self.x + 10, self.y - 50, 80, 50)
 
-    def enter_gate(self, pressedKey, player):
+    def enter_gate(self, pressedKey, player, screen):
         # save game
         if (abs(player.x - self.x) <= 100):
+            self.note_appear = True
+            #screen.blit(self.note.getSurface(), self.note.getPos())
             if (pressedKey[pygame.K_e]):
                 self.setColor((255, 255, 0))
                 self.active = True
+        else:
+            self.note_appear = False
 
 class water_fountain(interactive_object):
     def __init__(self, width, height, x=0, y=0):
@@ -83,16 +99,21 @@ class water_fountain(interactive_object):
         self.coin_check = False
         self.surface = pygame.image.load('media/water_fountain.png').convert_alpha()
         self.surface = pygame.transform.scale(self.surface, (width, height))
+        self.note = image('media/interact.png', self.x - 20, self.y - 50, 80, 50)
 
     def interact(self, pressedKey, player):
         return
 
-    def put_coin(self, pressedKey, player, coins):
+    def put_coin(self, pressedKey, player, coins, screen):
         # save game
         if (abs(player.x - self.x) <= 100 and coins >= 5):
+            self.note_appear = True
+            screen.blit(self.note.getSurface(), self.note.getPos())
             if (pressedKey[pygame.K_e]):
                 # minus the amount of coins
                 return 5
+        else:
+            self.note_appear = False
 
         return 0
 
@@ -112,8 +133,10 @@ class brush(sprite):
         self.turn = 1
         self.round = 0
         self.typ = typ
+        self.imagecounter = -1
         self.surface = pygame.Surface(self.dim, pygame.SRCALPHA, 32)
-        self.surface.fill(self.color)
+        self.surface = pygame.image.load('media/paintbrush00.png').convert_alpha()
+        self.surface = pygame.transform.scale(self.surface, (width, height))
 
     def brush_stay(self, player):
         if (player.attack == True):
@@ -122,16 +145,17 @@ class brush(sprite):
             self.appear = True
 
         if (player.dir == -1):
-            self.x = player.x - self.width - 10
+            self.x = player.x + player.width + 5
         else:
-            self.x = player.x + player.width + 10
+            self.x = player.x - self.width + 10
 
-        self.y = player.y + player.height - self.height - 10
+        self.y = player.y + player.height - self.height
         self.pos = (self.x, self.y)
 
     def brush_move(self, player):
         if (self.dir == 0):
             self.appear = False
+            self.imagecounter = -1
             if (player.dir == -1):
                 self.x = player.x - self.width - 50
             else:
@@ -144,6 +168,7 @@ class brush(sprite):
 
         if (player.attack == True):
             self.appear = True
+            self.brush_anim()
             if (abs(self.xspd) == 30):
                 self.turn = 1 - self.turn
 
@@ -179,6 +204,19 @@ class brush(sprite):
                     enemies[i].dir = 1
                 else:
                     enemies[i].dir = -1
+
+    def brush_anim(self):
+        self.imagecounter += 1
+
+        if self.imagecounter >= 8:
+            self.imagecounter = 7
+
+        self.surface = pygame.image.load('media/paintbrush0' + str(int(self.imagecounter / 2)) + '.png').convert_alpha()
+
+        if (self.dir == -1):
+            self.surface = pygame.transform.flip(self.surface, 1, 0)
+        else:
+            self.surface = pygame.transform.flip(self.surface, 0, 0)
 
 class throw_stuff(sprite):
     def __init__(self, typ = 0, direction = 1):  # add frames input
@@ -282,9 +320,10 @@ class bullet(sprite):
         self.blue = 0
         self.color = (0, 0, 0)
         self.surface = pygame.image.load('media/fireball.png').convert_alpha()
+        self.surface = pygame.transform.scale(self.surface, (width + 5, height))
         if (self.dir == -1):
             self.surface = pygame.transform.flip(self.surface, 1, 0)
-        self.surface = pygame.transform.scale(self.surface, (width + 50, height + 50))
+        self.surface = pygame.transform.scale(self.surface, (width, height))
         self.xspd = 15
         self.yspd = 10
 
@@ -314,7 +353,7 @@ class bullet(sprite):
 class rock(sprite):
     def __init__(self, width, height, boss):  # add frames input
         x = random.randrange(int(boss.move_range[0]) - 100, int(boss.move_range[1]) + 200)
-        y = boss.y - random.randrange(HEIGHT - 1000, HEIGHT - 500)
+        y = boss.y - random.randrange(HEIGHT - 2000, HEIGHT - 1500)
         sprite.__init__(self, x, y)
         self.width = width
         self.height = height

@@ -15,7 +15,7 @@ class save_point(interactive_object):
             self.note_appear = True
             if (pressedKey[pygame.K_e]):
                 self.setColor((255, 255, 0))
-                return 1, (section, self.org_x, self.org_y + self.height - player.height)
+                return 1, (section, self.org_x, self.org_y - player.height)
         else:
             self.note_appear = False
 
@@ -48,7 +48,7 @@ class control_panel(interactive_object):
     def __init__(self, width, height, x=0, y=0):
         interactive_object.__init__(self, width, height, x, y)
         self.active = False
-        self.note = image('media/interact.png', self.x - 20, self.y - 50, 80, 50)
+        self.note = image('media/interact.png', self.x, self.y - 50, 80, 50)
 
 
     def interact(self, pressedKey, player):
@@ -70,6 +70,9 @@ class drawing_piece(interactive_object):
 
     def interact(self, pressedKey, player):
         if (self.checkcollision(self, player)):
+            if (pygame.mixer.Channel(6).get_busy() == False):
+                pygame.mixer.Channel(6).play(pygame.mixer.Sound('media/collect.wav'), 0)
+                pygame.mixer.Channel(6).set_volume(0.05)
             self.setPos(-10000, -10000)
             self.collect = True
 
@@ -81,7 +84,7 @@ class gate(interactive_object):
         self.surface = pygame.image.load('media/door.png').convert_alpha()
         self.note = image('media/interact.png', self.x + 10, self.y - 50, 80, 50)
 
-    def enter_gate(self, pressedKey, player, screen):
+    def enter_gate(self, pressedKey, player):
         # save game
         if (abs(player.x - self.x) <= 100):
             self.note_appear = True
@@ -99,14 +102,15 @@ class water_fountain(interactive_object):
         self.coin_check = False
         self.surface = pygame.image.load('media/water_fountain.png').convert_alpha()
         self.surface = pygame.transform.scale(self.surface, (width, height))
-        self.note = image('media/interact.png', self.x - 20, self.y - 50, 80, 50)
+        self.note = image('media/money_npc00.png', self.x - 20, self.y - 50, 80, 50)
+        self.imagecounter = -1
 
     def interact(self, pressedKey, player):
         return
 
     def put_coin(self, pressedKey, player, coins, screen):
         # save game
-        if (abs(player.x - self.x) <= 100 and coins >= 5):
+        if (abs(player.x - self.x) <= 100 and coins >= 15):
             self.note_appear = True
             screen.blit(self.note.getSurface(), self.note.getPos())
             if (pressedKey[pygame.K_e]):
@@ -117,10 +121,15 @@ class water_fountain(interactive_object):
 
         return 0
 
+    def fountain_anim(self):
+        self.imagecounter += 1
 
-class stair(interactive_object):
-    def __init__(self, width, height, x=0, y=0):
-        interactive_object.__init__(self, width, height, x, y)
+        if self.imagecounter >= 24:
+            self.imagecounter = 0
+
+        self.surface = pygame.image.load('media/money_npc0' + str(int(self.imagecounter / 6)) + '.png').convert_alpha()
+        self.surface = pygame.transform.scale(self.surface, (200, 180))
+
 
 class brush(sprite):
     def __init__(self, width, height, x=0, y=0, typ = 1):  # add frames input
@@ -255,6 +264,12 @@ class throw_stuff(sprite):
                 self.dir = 0
                 self.setPos(-10000, -10000)
                 return
+
+        if (self.x >= WIDTH):
+            self.xspd = 0
+            self.yspd = 0
+            self.dir = 0
+            self.setPos(-10000, -10000)
 
         for i in range(len(enemies)):
             if (self.checkcollision(self, enemies[i])):

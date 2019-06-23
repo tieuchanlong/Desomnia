@@ -9,6 +9,9 @@ class sprite:
     def __init__(self, x=0, y=0):
         self.x = x
         self.y = y
+        self.width = 0
+        self.height = 0
+        self.dim = (0, 0)
         self.dir = random.randrange(2)
         self.dir = 1
         self.dir1 = 1
@@ -82,6 +85,10 @@ class interactive_object(sprite):
             self.note_appear = True
             #screen.blit(self.note.surface, self.note.getPos())
             if (pressedKey[pygame.K_e]):
+                if (pygame.mixer.Channel(6).get_busy() == False):
+                    pygame.mixer.Channel(6).play(pygame.mixer.Sound('media/collect.wav'), 0)
+                    pygame.mixer.Channel(6).set_volume(0.05)
+
                 self.setPos(-10000, -10000)
                 self.collect = True
         else:

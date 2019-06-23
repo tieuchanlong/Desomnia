@@ -42,7 +42,7 @@ screen.fill(BLACK) # Fill the entire surface with the chosen color. Think of fil
 clock = pygame.time.Clock()  # starts a clock object to measure time
 
 ### ----------------------------------------- Initiate sounds ------------------------------------ ###
-pygame.mixer.set_num_channels(10)
+pygame.mixer.set_num_channels(20)
 
 global section_area
 global scenechange
@@ -80,6 +80,11 @@ global prog_start
 global starttime
 global tutoriallevel
 global count
+global in_cave
+global instruction_screen
+global delay_mouse
+global easter_trigger
+global easter_start
 
 ### --- Start screen variables --- ###
 
@@ -102,22 +107,27 @@ big_boss = boss(300, 200, 0, 0)
 big_boss.setColor((255, 0, 0))
 
 boss_trigger = trigger(50, HEIGHT, 0, 0)
-boss_trigger.setColor((255, 255, 0))
+easter_trigger = trigger(50, HEIGHT, 0, 0)
 
 flowers = []
 npc2_talk = False
 boss_fight = False
+easter_start = False
 gate_open = False
 
+instruction_screen = image('media/lowopacity.png', 0, 0, WIDTH, HEIGHT)
+
 conversation = dialogue()
-cutscenelevel = 0
+cutscenelevel = 3
 pauselevel = 0
 prog_start = -1
 starttime = 0
 tutoriallevel = 0
+in_cave = False
+delay_mouse = 0
 
 stars = []
-for i in range(10):
+for i in range(11):
     stars.append(drawing_piece(20, 20, -10000, -10000))
 
 coins_collect = 0
@@ -126,10 +136,10 @@ for i in range(3):
     flowers.append(interactive_object(20, 20, 0, 0))
     flowers[i].note.setPos(flowers[i].x, flowers[i].y - 10)
 
-section_area = 2
+section_area = -1
 scenechange = -1
-save_count = 0
-saving = (0, 0, 0)
+save_count = 1
+saving = (0, 0, 300)
 
 endbackground1_x = 0
 endbackground1_y = 0
@@ -168,8 +178,7 @@ def section_gameplay(section):
     global coins_collect
     global flowers
     global screen
-
-    print(flowers[1].x - flowers[1].note.x)
+    global delay_mouse
 
     if (Anna.x + Anna.width / 2 > startscrolling_x):
         startbackground_x += Anna.x + Anna.width / 2 - startscrolling_x
@@ -260,6 +269,10 @@ def section_gameplay(section):
     Anna.player_pickup(pressedKey, flowers)
     Anna.player_pickup(pressedKey, stars)
 
+    if (Anna.hp <= 0):
+        section_area = saving[0]
+        scenechange = 0
+
     if (conversation.dialogue_unlocked[12] == True):
         Anna.player_pickup(pressedKey, flowers)
 
@@ -285,7 +298,7 @@ def section_gameplay(section):
             coins_collect += 1
             section.items[i].check = True
 
-    Anna.drawings.setText(str(star_count)+'/10')
+    Anna.drawings.setText(str(star_count)+'/11')
     Anna.coins.setText(str(coins_collect))
 
     Anna.player_swim(pressedKey, section.waters)
@@ -323,8 +336,8 @@ def section_gameplay(section):
         if (Anna.y + Anna.height > HEIGHT):
             Anna.setPos(Anna.x, HEIGHT - Anna.height)
 
-    Anna.player_skill(pressedKey, Anna_paint, conversation)
-    Anna.player_attack(pressedKey, section, conversation)
+    Anna.player_skill(pressedKey, Anna_paint, conversation, delay_mouse)
+    Anna.player_attack(pressedKey, section, conversation, delay_mouse)
     Anna_brush.brush_move(Anna)
     Anna_brush.brush_hit(section.moving_enemies)
     Anna_brush.brush_hit(section.stable_enemies)
@@ -425,6 +438,8 @@ def section_gameplay(section):
     if (section.saving_point.note_appear == True):
         screen.blit(section.saving_point.note.getSurface(), section.saving_point.note.getPos())
 
+    for i in range(len(stars)):
+        screen.blit(stars[i].getSurface(), stars[i].getPos())
 
     screen.blit(Anna.getSurface(), Anna.getPos())
     if (Anna_brush.appear == True):
@@ -531,11 +546,20 @@ def section1_init():
 
     # Set up the backgrounds
     section1.stable_grounds.append(ground(200, 180, section1.stable_grounds[6].x + 200, section1.stable_grounds[6].y - 180))
-    section1.stable_grounds[9].surface = pygame.image.load('media/house00.jpg').convert_alpha()
+    section1.stable_grounds[9].surface = pygame.image.load('media/house00.png').convert_alpha()
     section1.stable_grounds[9].surface = pygame.transform.scale(section1.stable_grounds[9].surface, (200, 180))
-    section1.stable_grounds.append(ground(300, 280, section1.stable_grounds[6].x + 500, section1.stable_grounds[6].y - 220))
-    section1.stable_grounds[10].surface = pygame.image.load('media/house02.jpg').convert_alpha()
-    section1.stable_grounds[10].surface = pygame.transform.scale(section1.stable_grounds[10].surface, (300, 280))
+    section1.stable_grounds.append(ground(300, 180, section1.stable_grounds[6].x + 500, section1.stable_grounds[6].y - 180))
+    section1.stable_grounds[10].surface = pygame.image.load('media/house02.png').convert_alpha()
+    section1.stable_grounds[10].surface = pygame.transform.scale(section1.stable_grounds[10].surface, (300, 180))
+
+    # Signs
+    section1.stable_grounds.append(ground(60, 60, section1.stable_grounds[0].x + 100, section1.stable_grounds[0].y - 60))
+    section1.stable_grounds[11].surface = pygame.image.load('media/sign_00.png').convert_alpha()
+    section1.stable_grounds[11].surface = pygame.transform.scale(section1.stable_grounds[11].surface, (60, 60))
+
+    section1.stable_grounds.append(ground(60, 60, section1.stable_grounds[6].x + 800, section1.stable_grounds[6].y - 60))
+    section1.stable_grounds[12].surface = pygame.image.load('media/sign_00.png').convert_alpha()
+    section1.stable_grounds[12].surface = pygame.transform.scale(section1.stable_grounds[12].surface, (60, 60))
 
     # Npc
     section1.moving_npc.append(moving_npc(30, 30, section1.stable_grounds[4].x + 300, section1.stable_grounds[4].y - 30))
@@ -554,12 +578,14 @@ def section1_init():
     section1.moving_npc[2].set_rangex(section1.stable_grounds[6].x, section1.npc[3].x - 30)
 
 
-    section1.instruction_points.append(instruction_point(50, 50, section1.stable_grounds[0].x + 200, section1.stable_grounds[0].y - 50))
+    section1.instruction_points.append(instruction_point(50, 50, section1.stable_grounds[0].x + 500, section1.stable_grounds[0].y - 50))
 
     # Items
     section1.items.append(interactive_object(20, 20, section1.stable_grounds[5].x + 50, section1.stable_grounds[5].y - 30))
+    section1.items.append(interactive_object(20, 20, section1.stable_grounds[7].x + 200, section1.stable_grounds[7].y - 30))
+    section1.items.append(interactive_object(20, 20, section1.stable_grounds[6].x + 400, section1.stable_grounds[6].y - 30))
 
-    for i in range(9):
+    for i in range(len(stars)):
         stars[i].setPos(-10000, -10000)
 
     if (stars[0].collect == False):
@@ -582,6 +608,7 @@ def section1_init():
     global save_count
     Anna = player(35, 35, section1.stable_grounds[0].x + 200, section1.stable_grounds[0].y - 35)
     if (save_count > 0):
+        print(saving)
         Anna.setPos(saving[1], saving[2])
 
     Anna.setColor((0, 0, 255))
@@ -633,8 +660,6 @@ def section1_gameplay():
     global tutoriallevel
     global pressedKeys
 
-    print(section1.stable_grounds[6].y)
-
     if (scenechange != 1):
         section_gameplay(section1)
 
@@ -651,11 +676,6 @@ def section1_gameplay():
         saving = (2, 100, HEIGHT - 200)
         scenechange = 0
 
-
-    if (Anna.hp <= 0):
-        saving = (0, section1.stable_grounds[0].x + 200, section1.stable_grounds[0].y - 35)
-        section_area = saving[0]
-        scenechange = 0
 
     screen.blit(stars[0].getSurface(), stars[0].getPos())
 
@@ -686,8 +706,22 @@ def section2_init():
 
     # Set up the backgrounds
     section2.stable_grounds.append(ground(200, 180, section2.stable_grounds[1].x + 150, section2.stable_grounds[1].y - 180))
-    section2.stable_grounds[15].surface = pygame.image.load('media/house00.jpg').convert_alpha()
+    section2.stable_grounds[15].surface = pygame.image.load('media/house00.png').convert_alpha()
     section2.stable_grounds[15].surface = pygame.transform.scale(section2.stable_grounds[15].surface, (200, 180))
+
+    # Signs
+    section2.stable_grounds.append(ground(60, 60, section2.stable_grounds[1].x + 100, section2.stable_grounds[1].y - 60))
+    section2.stable_grounds[16].surface = pygame.image.load('media/sign_00.png').convert_alpha()
+    section2.stable_grounds[16].surface = pygame.transform.scale(section2.stable_grounds[16].surface, (60, 60))
+
+    section2.stable_grounds.append(ground(60, 60, section2.stable_grounds[5].x + section2.stable_grounds[5].width - 100, section2.stable_grounds[5].y - 60))
+    section2.stable_grounds[17].surface = pygame.image.load('media/sign_00.png').convert_alpha()
+    section2.stable_grounds[17].surface = pygame.transform.scale(section2.stable_grounds[17].surface, (60, 60))
+
+    section2.stable_grounds.append(ground(60, 60, section2.stable_grounds[10].x + 100, section2.stable_grounds[10].y - 60))
+    section2.stable_grounds[18].surface = pygame.image.load('media/sign_00.png').convert_alpha()
+    section2.stable_grounds[18].surface = pygame.transform.scale(section2.stable_grounds[18].surface, (60, 60))
+
 
     section2.waters.append(water(7 * WIDTH, 2000, section2.stable_grounds[0].x, section2.stable_grounds[0].y + 100))
 
@@ -699,31 +733,31 @@ def section2_init():
     # Traps
     section2.traps.append(trap(50, section2.waters[0].height, section2.stable_grounds[5].x - 50, section2.waters[0].y))
 
-    section2.moving_traps.append(moving_trap(100, 2000, section2.stable_grounds[0].x + 200, section2.waters[0].y + 200))
+    section2.moving_traps.append(moving_trap(300, 1000, section2.stable_grounds[0].x + 200, section2.waters[0].y + 200))
     section2.moving_traps[0].set_rangey(section2.waters[0].y + 300, section2.stable_grounds[0].y + 1000)
 
-    section2.moving_traps.append(moving_trap(100, 2000, section2.moving_traps[0].x + section2.moving_traps[0].width + 300, section2.waters[0].y + 200))
+    section2.moving_traps.append(moving_trap(300, 1000, section2.moving_traps[0].x + section2.moving_traps[0].width + 300, section2.waters[0].y + 200))
     section2.moving_traps[1].set_rangey(section2.waters[0].y + 300, section2.stable_grounds[0].y + 1000)
 
-    section2.moving_traps.append(moving_trap(100, 2000, section2.moving_traps[1].x + section2.moving_traps[1].width + 300, section2.waters[0].y + 200))
+    section2.moving_traps.append(moving_trap(300, 1000, section2.moving_traps[1].x + section2.moving_traps[1].width + 300, section2.waters[0].y + 200))
     section2.moving_traps[2].set_rangey(section2.waters[0].y + 300, section2.stable_grounds[0].y + 1000)
 
-    section2.moving_traps.append(moving_trap(100, 2000, section2.moving_traps[2].x + section2.moving_traps[2].width + 300, section2.waters[0].y + 200))
+    section2.moving_traps.append(moving_trap(300, 1000, section2.moving_traps[2].x + section2.moving_traps[2].width + 300, section2.waters[0].y + 200))
     section2.moving_traps[3].set_rangey(section2.waters[0].y + 300, section2.stable_grounds[0].y + 1000)
 
-    section2.moving_traps.append(moving_trap(100, 2000, section2.moving_traps[3].x + section2.moving_traps[3].width + 300, section2.waters[0].y + 200))
+    section2.moving_traps.append(moving_trap(300, 1000, section2.moving_traps[3].x + section2.moving_traps[3].width + 300, section2.waters[0].y + 200))
     section2.moving_traps[4].set_rangey(section2.waters[0].y + 300, section2.stable_grounds[0].y + 1000)
 
-    section2.moving_traps.append(moving_trap(100, 2000, section2.moving_traps[4].x + section2.moving_traps[4].width + 300, section2.waters[0].y + 200))
+    section2.moving_traps.append(moving_trap(300, 1000, section2.moving_traps[4].x + section2.moving_traps[4].width + 300, section2.waters[0].y + 200))
     section2.moving_traps[5].set_rangey(section2.waters[0].y + 300, section2.stable_grounds[0].y + 1000)
 
-    section2.moving_traps.append(moving_trap(100, 2000, section2.moving_traps[5].x + section2.moving_traps[5].width + 300, section2.waters[0].y + 200))
+    section2.moving_traps.append(moving_trap(300, 1000, section2.moving_traps[5].x + section2.moving_traps[5].width + 300, section2.waters[0].y + 200))
     section2.moving_traps[6].set_rangey(section2.waters[0].y + 100, section2.stable_grounds[0].y + 1000)
 
-    section2.moving_traps.append(moving_trap(100, 2000, section2.moving_traps[6].x + section2.moving_traps[6].width + 300, section2.waters[0].y + 200))
+    section2.moving_traps.append(moving_trap(300, 1000, section2.moving_traps[6].x + section2.moving_traps[6].width + 300, section2.waters[0].y + 200))
     section2.moving_traps[7].set_rangey(section2.waters[0].y + 200, section2.stable_grounds[0].y + 1000)
 
-    section2.moving_traps.append(moving_trap(100, 2000, section2.moving_traps[7].x + section2.moving_traps[7].width + 300, section2.waters[0].y + 200))
+    section2.moving_traps.append(moving_trap(300, 1000, section2.moving_traps[7].x + section2.moving_traps[7].width + 300, section2.waters[0].y + 200))
     section2.moving_traps[8].set_rangey(section2.waters[0].y + 50, section2.stable_grounds[0].y + 1000)
 
     # Set up the boundaries
@@ -742,6 +776,7 @@ def section2_init():
     global saving
     global save_count
     Anna = player(35, 35, section2.stable_grounds[0].x, section2.stable_grounds[0].y - 35)
+    print(save_count)
     if (save_count > 0):
         Anna.setPos(saving[1] - 50, saving[2])
 
@@ -793,13 +828,22 @@ def section2_init():
     section2.moving_enemies[1].dir = -1
     section2.moving_enemies[2].dir = -1
 
-    section2.items.append(interactive_object(20, 20, section2.stable_grounds[14].x + 50, section2.stable_grounds[14].y - 30))
 
-    for i in range(9):
+    # Items
+    section2.items.append(interactive_object(20, 20, section2.stable_grounds[14].x + 50, section2.stable_grounds[14].y - 30))
+    section2.items.append(interactive_object(20, 20, section2.stable_grounds[11].x + 50, section2.stable_grounds[11].y - 30))
+    section2.items.append(interactive_object(20, 20, section2.waters[0].x + 400, section2.waters[0].y + 200))
+    section2.items.append(interactive_object(20, 20, section2.stable_grounds[10].x + 100, section2.stable_grounds[10].y - 30))
+    section2.items.append(interactive_object(20, 20, section2.stable_grounds[7].x + 500, section2.stable_grounds[7].y - 40))
+
+    for i in range(len(stars)):
         stars[i].setPos(-10000, -10000)
 
     if (stars[1].collect == False):
-        stars[1].setPos(section2.moving_traps[4].x + 20, section2.stable_grounds[0].y + section2.stable_grounds[0].height + 200)
+        stars[1].setPos(section2.moving_traps[2].x + 20, section2.stable_grounds[0].y + section2.stable_grounds[0].height + 200)
+
+    if (stars[10].collect == False):
+        stars[10].setPos(section2.stable_grounds[6].x + 200, section2.stable_grounds[6].y - 40)
 
 
     for i in range(len(section2.moving_enemies)):
@@ -856,6 +900,7 @@ def section2_gameplay():
         if (pressedKey[pygame.K_e]):
             tutoriallevel = 2
 
+
     # Special cases
     if (section2.moving_npc[0].x <= section2.stable_grounds[0].x):
         section2.moving_npc[1].dir = 1
@@ -867,7 +912,7 @@ def section2_gameplay():
     if (Anna.x >= WIDTH and scenechange == -1):
         section_area = 4
         save_count += 1
-        saving = (0, 0, 565)
+        saving = (4, 0, 565)
         scenechange = 0
 
     if (Anna.x <= -Anna.width and scenechange == -1):
@@ -876,10 +921,7 @@ def section2_gameplay():
         saving = (0, 2200 + 2*WIDTH, HEIGHT - 50)
         scenechange = 0
 
-    if (Anna.hp <= 0):
-        saving = (2, section2.stable_grounds[0].x, section2.stable_grounds[0].y - 35)
-        section_area = saving[0]
-        scenechange = 0
+
 
     screen.blit(stars[1].getSurface(), stars[1].getPos())
 
@@ -914,8 +956,17 @@ def section3_init(): # Add 1 more trap
 
     # Set up the backgrounds
     section3.stable_grounds.append(ground(200, 180, section3.stable_grounds[10].x + 150, section3.stable_grounds[10].y - 180))
-    section3.stable_grounds[17].surface = pygame.image.load('media/house02.jpg').convert_alpha()
+    section3.stable_grounds[17].surface = pygame.image.load('media/house02.png').convert_alpha()
     section3.stable_grounds[17].surface = pygame.transform.scale(section3.stable_grounds[17].surface, (200, 180))
+
+    # Signs
+    section3.stable_grounds.append(ground(60, 60, section3.stable_grounds[0].x + section3.stable_grounds[0].width - 100, section3.stable_grounds[0].y - 60))
+    section3.stable_grounds[18].surface = pygame.image.load('media/sign_00.png').convert_alpha()
+    section3.stable_grounds[18].surface = pygame.transform.scale(section3.stable_grounds[18].surface, (60, 60))
+
+    section3.stable_grounds.append(ground(60, 60, section3.stable_grounds[4].x + 200, section3.stable_grounds[4].y - 60))
+    section3.stable_grounds[19].surface = pygame.image.load('media/sign_00.png').convert_alpha()
+    section3.stable_grounds[19].surface = pygame.transform.scale(section3.stable_grounds[19].surface, (60, 60))
 
     section3.moving_grounds.append(moving_ground(100, 50, section3.stable_grounds[0].x + section3.stable_grounds[0].width + 200, section3.stable_grounds[0].y - 160))
     section3.moving_grounds[0].set_rangex(section3.stable_grounds[0].x + section3.stable_grounds[0].width, section3.stable_grounds[1].x + 100)
@@ -993,23 +1044,30 @@ def section3_init(): # Add 1 more trap
 
     # Items
     section3.items.append(interactive_object(20, 20, section3.stable_grounds[1].x + 100, section3.stable_grounds[1].y - 30))
+    section3.items.append(interactive_object(20, 20, section3.stable_grounds[10].x + 100, section3.stable_grounds[10].y - 30))
+    section3.items.append(interactive_object(20, 20, section3.stable_grounds[10].x + 100, section3.stable_grounds[10].y - 30))
+    section3.items.append(interactive_object(20, 20, section3.stable_grounds[11].x + 300, section3.stable_grounds[11].y - 30))
 
-    for i in range(9):
+    for i in range(len(stars)):
         stars[i].setPos(-10000, -10000)
 
     if (stars[2].collect == False):
         stars[2].setPos(section3.stable_grounds[10].x + 50, section3.stable_grounds[10].y - 30)
 
 
-    section3.items.append(interactive_object(50, 60, section3.stable_grounds[13].x + section3.stable_grounds[13].width - 50, section3.stable_grounds[13].y - 60))
-    section3.items[1].setColor((255, 255, 0))
+    section3.items.append(interactive_object(50, 50, section3.stable_grounds[13].x + section3.stable_grounds[13].width - 50, section3.stable_grounds[13].y - 50))
+    section3.items[4].surface = pygame.image.load('media/orb.png').convert_alpha()
+    section3.items[4].coin_check = False
+    section3.items[4].surface = pygame.transform.scale(section3.items[4].surface, (50, 50))
 
     section3.gates.append(gate(50, 60, section3.stable_grounds[8].x + 200, section3.stable_grounds[8].y - 60))
 
     section3.instruction_points.append(instruction_point(50, 50, section3.stable_grounds[1].x + 200, section3.stable_grounds[1].y - 50))
 
 
-    section3.control_panels.append(control_panel(40, 40, section3.stable_grounds[4].x + section3.stable_grounds[13].width - 100, section3.stable_grounds[4].y - 40))
+    section3.control_panels.append(control_panel(60, 60, section3.stable_grounds[4].x + section3.stable_grounds[13].width - 100, section3.stable_grounds[4].y - 60))
+    section3.control_panels[0].surface = pygame.image.load('media/control_00.png').convert_alpha()
+    section3.control_panels[0].surface = pygame.transform.scale(section3.control_panels[0].surface, (60, 60))
 
     section3.hor_ground = 4
 
@@ -1067,7 +1125,8 @@ def section3_gameplay():
 
     if (scenechange != 1):
         section_gameplay(section3)
-    section3.gates[0].enter_gate(pressedKey, Anna, screen)
+
+    section3.gates[0].enter_gate(pressedKey, Anna)
 
     if (section3.instruction_points[0].note_appear == True):
         if (pressedKey[pygame.K_e]):
@@ -1088,10 +1147,12 @@ def section3_gameplay():
         Anna.setPos(WIDTH - Anna.width, Anna.y)
 
 
-    if (section3.items[1].x <= -5000 and section3.items[1].y <= -5000):
-        section3.control_panels[0].interact(pressedKey, Anna, screen)
+    if (section3.items[4].x <= -5000 and section3.items[4].y <= -5000):
+        section3.control_panels[0].interact(pressedKey, Anna)
         if (section3.control_panels[0].active == True and move_count == 0):
             start_move = True
+            section3.control_panels[0].surface = pygame.image.load('media/control_01.png').convert_alpha()
+            section3.control_panels[0].surface = pygame.transform.scale(section3.control_panels[0].surface, (60, 60))
 
     if (start_move == True):
         section3.stable_grounds[6].setPos(section3.stable_grounds[6].x, section3.stable_grounds[6].y - 10)
@@ -1100,11 +1161,10 @@ def section3_gameplay():
 
         if (move_count >= 300):
             start_move = False
+            stars[2].setPos(section3.stable_grounds[7].x + 50, section3.stable_grounds[7].y - 40)
 
-    if (Anna.hp <= 0):
-        saving = (4, 300, section3.stable_grounds[0].y - 50)
-        section_area = saving[0]
-        scenechange = 0
+    if (section3.control_panels[0].note_appear == True):
+        screen.blit(section3.control_panels[0].note.getSurface(), section3.control_panels[0].note.getPos())
 
     screen.blit(stars[2].getSurface(), stars[2].getPos())
 
@@ -1134,8 +1194,13 @@ def section4_init():
 
     # Set up the backgrounds
     section4.stable_grounds.append(ground(250, 180, section4.stable_grounds[1].x + 200, section4.stable_grounds[1].y - 180))
-    section4.stable_grounds[16].surface = pygame.image.load('media/house01.jpg').convert_alpha()
+    section4.stable_grounds[16].surface = pygame.image.load('media/house01.png').convert_alpha()
     section4.stable_grounds[16].surface = pygame.transform.scale(section4.stable_grounds[16].surface, (250, 180))
+
+    # Signs
+    section4.stable_grounds.append(ground(60, 60, section4.stable_grounds[0].x + section4.stable_grounds[0].width - 100,section4.stable_grounds[0].y - 60))
+    section4.stable_grounds[17].surface = pygame.image.load('media/sign_00.png').convert_alpha()
+    section4.stable_grounds[17].surface = pygame.transform.scale(section4.stable_grounds[17].surface, (60, 60))
 
     section4.waters.append(water(WIDTH - section4.stable_grounds[8].width, 1000, section4.stable_grounds[8].x + section4.stable_grounds[8].width, section4.stable_grounds[9].y + 100))
     section4.waters.append(water(5000, 500, section4.stable_grounds[9].x - 3000, section4.stable_grounds[9].y + 150))
@@ -1215,6 +1280,7 @@ def section4_init():
     section4.npc.append(npc(150, 150, section4.stable_grounds[0].x + section4.stable_grounds[0].width - 200, section4.stable_grounds[0].y - 120))
 
     # Items
+
     for i in range(len(stars)):
         stars[i].setPos(-10000, -10000)
 
@@ -1228,6 +1294,8 @@ def section4_init():
         stars[9].setPos(section4.waters[0].x + 100, section4.waters[0].y)
 
     section4.items.append(interactive_object(50, 60, section4.stable_grounds[5].x + section4.stable_grounds[5].width, section4.stable_grounds[5].y - 60))
+    section4.items.append(interactive_object(20, 20, section4.stable_grounds[9].x + 100, section4.stable_grounds[9].y - 30))
+    section4.items.append(interactive_object(20, 20, section4.waters[0].x + 100, section4.waters[0].y + 50))
 
     section4.gates.append(gate(50, 60, section4.stable_grounds[2].x + 50, section4.stable_grounds[2].y - 60))
 
@@ -1277,9 +1345,9 @@ def section4_gameplay():
     global  conversation
     global screen
 
-    section4.gates[0].enter_gate(pressedKey, Anna, screen)
-    section4.gates[1].enter_gate(pressedKey, Anna, screen)
-    section4.gates[2].enter_gate(pressedKey, Anna, screen)
+    section4.gates[0].enter_gate(pressedKey, Anna)
+    section4.gates[1].enter_gate(pressedKey, Anna)
+    section4.gates[2].enter_gate(pressedKey, Anna)
 
     if (scenechange != 1):
         section_gameplay(section4)
@@ -1359,11 +1427,6 @@ def section4_gameplay():
             Anna.x = section4.stable_grounds[1].x + section4.stable_grounds[1].width + 100
             Anna.setPos(Anna.x, Anna.y)
 
-    if (Anna.hp <= 0):
-        saving = (6, section4.stable_grounds[2].x + 50, section4.stable_grounds[2].y - 35)
-        section_area = saving[0]
-        scenechange = 0
-
 
     if (section4.gates[0].active == True and scenechange == -1):
         section_area = 4
@@ -1424,6 +1487,20 @@ def section5_init():
         section5.stable_grounds[i].surface = pygame.image.load('media/caveground.png').convert_alpha()
         section5.stable_grounds[i].surface = pygame.transform.scale(section5.stable_grounds[i].surface, (section5.stable_grounds[i].width, min(section5.stable_grounds[i].height, 300)))
 
+
+    # Signs
+    section5.stable_grounds.append(ground(60, 60, section5.stable_grounds[0].x + section5.stable_grounds[0].width - 100, section5.stable_grounds[0].y - 60))
+    section5.stable_grounds[8].surface = pygame.image.load('media/sign_00.png').convert_alpha()
+    section5.stable_grounds[8].surface = pygame.transform.scale(section5.stable_grounds[8].surface, (60, 60))
+
+    # Bonfire
+    section5.stable_grounds.append(ground(100, 150, section5.stable_grounds[0].x + 160,section5.stable_grounds[0].y - 130))
+    section5.stable_grounds.append(ground(100, 150, section5.stable_grounds[0].x + 510, section5.stable_grounds[0].y - 130))
+
+    section5.stable_grounds.append(ground(200, 200, section5.stable_grounds[0].x + section5.stable_grounds[0].width - 400,section5.stable_grounds[0].y - 200))
+    section5.stable_grounds[11].surface = pygame.image.load('media/hut.png').convert_alpha()
+    section5.stable_grounds[11].surface = pygame.transform.scale(section5.stable_grounds[11].surface, (200, 200))
+
     # Set up the boundaries
     global start_x
     global start_y
@@ -1475,8 +1552,18 @@ def section5_init():
 
     section5.waters.append(water(section5.stable_grounds[0].x - section5.stable_grounds[7].x - section5.stable_grounds[7].width + 1400, 500, section5.stable_grounds[7].x, section5.stable_grounds[7].y + 200))
 
+    # NPC
+    section5.npc.append(npc(50, 50, section5.stable_grounds[0].x + 100, section5.stable_grounds[0].y - 50))
+    section5.npc.append(npc(50, 50, section5.stable_grounds[0].x + 300, section5.stable_grounds[0].y - 50))
+    section5.npc.append(npc(50, 50, section5.stable_grounds[0].x + 480, section5.stable_grounds[0].y - 50))
+    section5.npc.append(npc(50, 50, section5.stable_grounds[0].x + 650, section5.stable_grounds[0].y - 50))
+
     # Items
-    for i in range(9):
+    section5.items.append(interactive_object(20, 20, section5.stable_grounds[4].x + 50, section5.stable_grounds[4].y - 30))
+    section5.items.append(interactive_object(20, 20, section5.stable_grounds[0].x + 400, section5.stable_grounds[0].y - 30))
+    section5.items.append(interactive_object(20, 20, section5.stable_grounds[7].x + section5.stable_grounds[7].width + 100, section5.stable_grounds[7].y + 200))
+
+    for i in range(len(stars)):
         stars[i].setPos(-10000, -10000)
 
     if (stars[5].collect == False):
@@ -1544,7 +1631,13 @@ def section5_gameplay():
     if (scenechange != 1):
         section_gameplay(section5)
 
-    section5.gates[0].enter_gate(pressedKey, Anna, screen)
+    section5.stable_grounds[9].bonfire_anim()
+    section5.stable_grounds[10].bonfire_anim()
+
+    for i in range(len(section5.npc)):
+        section5.npc[i].crazy_npc_anim()
+
+    section5.gates[0].enter_gate(pressedKey, Anna)
 
     if (section5.gates[0].active == True and scenechange == -1):
         section_area = 6
@@ -1552,10 +1645,6 @@ def section5_gameplay():
         saving = (6, 3600, HEIGHT - 900)
         scenechange = 0
 
-    if (Anna.hp <= 0):
-        saving = (8, section5.stable_grounds[1].x + 100, section5.stable_grounds[1].y - 35)
-        section_area = saving[0]
-        scenechange = 0
 
     screen.blit(flowers[0].getSurface(), flowers[0].getPos())
     screen.blit(flowers[1].getSurface(), flowers[1].getPos())
@@ -1566,6 +1655,7 @@ def section6_init():
     # Initiate the first section
     global section6
     global screen
+
     section6 = section()
 
     section6.stable_grounds.append(ground(2*WIDTH, 950, -WIDTH-600, HEIGHT - 200))
@@ -1592,6 +1682,25 @@ def section6_init():
         section6.stable_grounds[i].surface = pygame.transform.scale(section6.stable_grounds[i].surface, (section6.stable_grounds[i].width, min(section6.stable_grounds[i].height, 300)))
 
 
+    # Signs
+    section6.stable_grounds.append(ground(60, 60, section6.stable_grounds[4].x + section6.stable_grounds[4].width - 50, section6.stable_grounds[4].y - 60))
+    section6.stable_grounds[17].surface = pygame.image.load('media/sign_00.png').convert_alpha()
+    section6.stable_grounds[17].surface = pygame.transform.flip(section6.stable_grounds[17].surface, 1, 0)
+    section6.stable_grounds[17].surface = pygame.transform.scale(section6.stable_grounds[17].surface, (60, 60))
+
+    section6.stable_grounds.append(ground(1500, 100, section6.stable_grounds[11].x, section6.stable_grounds[11].y + 600))
+    section6.stable_grounds[18].surface = pygame.image.load('media/caveground.png').convert_alpha()
+    section6.stable_grounds[18].surface = pygame.transform.scale(section6.stable_grounds[18].surface, (section6.stable_grounds[18].width, min(section6.stable_grounds[18].height, 300)))
+
+    section6.stable_grounds.append(ground(60, 60, section6.stable_grounds[18].x + 100,section6.stable_grounds[18].y - 60))
+    section6.stable_grounds[19].surface = pygame.image.load('media/sign_01.png').convert_alpha()
+    section6.stable_grounds[19].surface = pygame.transform.flip(section6.stable_grounds[19].surface, 1, 0)
+    section6.stable_grounds[19].surface = pygame.transform.scale(section6.stable_grounds[19].surface, (60, 60))
+
+
+    section6.waters.append(water(1000, HEIGHT, section6.stable_grounds[4].x + section6.stable_grounds[4].width, section6.stable_grounds[4].y + 200))
+
+
     # Set up the boundaries
     global start_x
     global start_y
@@ -1609,8 +1718,10 @@ def section6_init():
     big_boss.setColor((255, 0, 0))
 
     global boss_trigger
-    boss_trigger = trigger(50, HEIGHT, section6.stable_grounds[11].x + section6.stable_grounds[11].width - 800, section6.stable_grounds[11].y - HEIGHT)
-    boss_trigger.setColor((255, 255, 0))
+    boss_trigger = trigger(50, 3*HEIGHT, section6.stable_grounds[11].x + section6.stable_grounds[11].width - 800, section6.stable_grounds[11].y - 3*HEIGHT)
+
+    global easter_trigger
+    easter_trigger = trigger(50, abs(section6.stable_grounds[18].y - section6.stable_grounds[11].y - section6.stable_grounds[11].height), section6.stable_grounds[18].x + section6.stable_grounds[18].width - 300, section6.stable_grounds[11].y + section6.stable_grounds[11].height)
 
     # Inititate the player
     global Anna
@@ -1638,9 +1749,9 @@ def section6_init():
     section6.saving_point = save_point(100, 20, section6.stable_grounds[7].x + 10, section6.stable_grounds[7].y - 20)
 
     # Enemies
-    section6.moving_enemies.append(jumping_enemy(60, 60, section6.stable_grounds[0].x, section6.stable_grounds[0].y - 60))
+    section6.moving_enemies.append(jumping_enemy(150, 150, section6.stable_grounds[0].x, section6.stable_grounds[0].y - 150))
     section6.moving_enemies[0].set_rangex(section6.stable_grounds[0].x, section6.stable_grounds[5].x)
-    section6.moving_enemies.append(jumping_enemy(60, 60, section6.stable_grounds[6].x - 60, section6.stable_grounds[0].y - 60))
+    section6.moving_enemies.append(jumping_enemy(150, 150, section6.stable_grounds[6].x - 60, section6.stable_grounds[0].y - 150))
     section6.moving_enemies[1].set_rangex(section6.stable_grounds[6].x - 60, section6.stable_grounds[6].x + 200)
 
     section6.moving_enemies[1].dir = -1
@@ -1674,14 +1785,16 @@ def section6_init():
     section6.moving_traps[7].set_rangey(section6.stable_grounds[12].y - 250, section6.stable_grounds[12].y + 400)
 
     # Items
-    for i in range(9):
+    for i in range(len(stars)):
         stars[i].setPos(-10000, -10000)
 
     if (stars[7].collect == False):
         stars[7].setPos(section6.stable_grounds[2].x - 100, section6.stable_grounds[6].y - 150)
 
     section6.items.append(interactive_object(20, 20, section6.stable_grounds[12].x + 1000, section6.stable_grounds[12].y - 30))
-
+    section6.items.append(interactive_object(20, 20, section6.stable_grounds[5].x + 50, section6.stable_grounds[5].y - 30))
+    section6.items.append(interactive_object(20, 20, section6.stable_grounds[1].x + 50, section6.stable_grounds[1].y - 30))
+    section6.items.append(interactive_object(20, 20, section6.stable_grounds[12].x + 500, section6.stable_grounds[12].y - 30))
 
     flowers[2].setPos(-10000, -10000)
     flowers[2].surface = pygame.image.load('media/flower.png').convert_alpha()
@@ -1741,9 +1854,16 @@ def section6_gameplay():
 
     section6.gates[0].enter_gate(pressedKey, Anna)
 
+    # Boss fight
     global boss_trigger
 
+
     if (boss_trigger.checkcollision(boss_trigger, Anna)):
+        if (pygame.mixer.Channel(12).get_busy() == False):
+            pygame.mixer.Channel(12).play(pygame.mixer.Sound('media/boss_theme.wav'), 1)
+            pygame.mixer.Channel(11).stop()
+            pygame.mixer.Channel(12).set_volume(0.05)
+
         boss_fight = True
         boss_trigger.setPos(-10000, -10000)
         if (conversation.dialogue_unlocked[25] == False):
@@ -1755,10 +1875,31 @@ def section6_gameplay():
     else:
         big_boss.boss_idle_ani()
 
+    if (boss_fight == True and big_boss.hp > 0):
+        if (Anna.x > section6.stable_grounds[7].x + section6.stable_grounds[7].width - Anna.width):
+            Anna.setPos(section6.stable_grounds[7].x + section6.stable_grounds[7].width - Anna.width, Anna.y)
+
+    if (big_boss.hp <= 0):
+        pygame.mixer.Channel(12).stop()
+        if (pygame.mixer.Channel(11).get_busy() == False):
+            pygame.mixer.Channel(11).play(pygame.mixer.Sound('media/cave1.wav'), 1)
+            pygame.mixer.Channel(11).set_volume(0.05)
+
     if (big_boss.hp <= 0 and flowers[2].collect == False):
         flowers[2].setPos(section6.stable_grounds[11].x + 200, section6.stable_grounds[11].y - 50)
         flowers[2].note.setPos(flowers[2].x, flowers[2].y - 40)
         screen.blit(flowers[2].getSurface(), flowers[2].getPos())
+
+
+    # Easter Egg
+    if (Anna.checkcollision(Anna, easter_trigger) and easter_trigger.x >= -5000):
+        easter_trigger.setPos(-10000, -10000)
+        easter_start = True
+
+    '''if (easter_start == True):
+        # Make the strange Npc runs away'''
+
+
 
     if (section6.gates[0].active == True and scenechange == -1):
         section_area = 6
@@ -1775,13 +1916,8 @@ def section6_gameplay():
     if (Anna.x < 0):
         Anna.setPos(0, Anna.y)
 
-    if (Anna.hp <= 0):
-        saving = (10, section6.stable_grounds[4].x + 200, section6.stable_grounds[4].y - 35)
-        section_area = saving[0]
-        scenechange = 0
 
     screen.blit(big_boss.getSurface(), big_boss.getPos())
-    screen.blit(boss_trigger.getSurface(), boss_trigger.getPos())
 
     for i in range(len(big_boss.rocks)):
         screen.blit(big_boss.rocks[i].getSurface(), big_boss.rocks[i].getPos())
@@ -1799,11 +1935,27 @@ def section7_init():
     section7.waters.append(water(2*WIDTH, 2*HEIGHT, -WIDTH, 0))
     section7.waters.append(water(2 * WIDTH, 2 * HEIGHT, section7.waters[0].x + section7.waters[0].width, 0))
 
-    for i in range(9):
+
+    # Items
+    for i in range(len(stars)):
         stars[i].setPos(-10000, -10000)
 
     if (stars[8].collect == False):
         stars[8].setPos(section7.waters[0].x + 100, section7.waters[0].y + 1000)
+
+    for i in range(20):
+        section7.items.append(interactive_object(20, 20, section7.waters[0].x + random.randrange(1700), section7.waters[0].y + random.randrange(800)))
+
+        while True:
+            check = True
+            for j in range(i):
+                if (i != j and section7.items[i].checkcollision(section7.items[i], section7.items[j])):
+                    section7.items[i].setPos(section7.waters[0].x + random.randrange(1500), section7.waters[0].y + random.randrange(400))
+                    check = False
+                    break
+
+            if (check == True):
+                break
 
     # Traps
     section7.moving_traps.append(moving_trap(100, 2000, section7.waters[0].x + 200, section7.waters[0].y + 200))
@@ -1917,11 +2069,6 @@ def section7_gameplay():
         saving = (12, 3500 - WIDTH, HEIGHT - 300)
         scenechange = 0
 
-    if (Anna.hp <= 0):
-        saving = (12, 0, section7.waters[0].y)
-        section_area = saving[0]
-        scenechange = 0
-
 
 def section8_init():
     # Initiate the first section
@@ -1933,9 +2080,15 @@ def section8_init():
     section8.stable_grounds.append(ground(WIDTH, 2*HEIGHT, 0, 2*HEIGHT - 200))
     section8.stable_grounds.append(ground(WIDTH, 2 * HEIGHT, section8.stable_grounds[0].x + section8.stable_grounds[0].width, 2 * HEIGHT - 200))
 
-    section8.items.append(water_fountain(200, 100, section8.stable_grounds[0].x + 1100, section8.stable_grounds[0].y - 90))
+    # Signs
+    section8.stable_grounds.append(ground(100, 100, section8.stable_grounds[1].x + section8.stable_grounds[1].width - 800, section8.stable_grounds[1].y - 100))
+    section8.stable_grounds[2].surface = pygame.image.load('media/sign_02.png').convert_alpha()
+    section8.stable_grounds[2].surface = pygame.transform.scale(section8.stable_grounds[2].surface, (100, 100))
+
+    section8.items.append(water_fountain(200, 180, section8.stable_grounds[0].x + 1100, section8.stable_grounds[0].y - 170))
 
     section8.gates.append(gate(80, 80, section8.stable_grounds[0].x + 1400, section8.stable_grounds[0].y + 200))
+
 
     # Set up the boundaries
     global start_x
@@ -1970,6 +2123,11 @@ def section8_init():
 
     global Anna_paint
     Anna_paint = paint_bar(60, 60, 20, 20)
+
+
+    # Items
+    for i in range(len(stars)):
+        stars[i].setPos(-10000, -10000)
 
     # Initiate background image
     global bg
@@ -2017,8 +2175,10 @@ def section8_gameplay():
     if (scenechange != 1):
         section_gameplay(section8)
 
+    section8.items[0].fountain_anim()
+
     if (section8.items[0].put_coin(pressedKey, Anna, coins_collect, screen) == 5):
-        coins_collect -= 5
+        coins_collect -= 15
         gate_open = True
 
     if (gate_open == True):
@@ -2063,6 +2223,7 @@ def pause_screen(): ### display Surface quit error
         mx, my = pygame.mouse.get_pos()
         if mx > ps1.x and mx < ps1.x + ps1.getText().get_width() and my > ps1.y and my < ps1.y + ps1.getText().get_height(): # resume
             pauselevel = 0 # resume
+            delay_mouse = 0
             return pauselevel
         elif mx > ps2.x and mx < ps2.x + ps2.getText().get_width() and my > ps2.y and my < ps2.y + ps2.getText().get_height():
             pauselevel = 2 # key binds screen
@@ -2135,6 +2296,7 @@ def keybinds_screen():
 def cutscene01():
     global start_ticks
     global prog_start
+    global delay_mouse
 
     text01 = text(100, 70, '"In a Wonderland they lie, Dreaming as the days go by,', 28, "Renogare", BLACK)
     x = WIDTH / 2 - text01.getText().get_width() / 2
@@ -2172,10 +2334,6 @@ def cutscene01():
     screen.blit(text01.getText(), text01.gettextpos())
 
 
-def cutscene02():
-    global start_ticks
-    global prog_start
-
     text02 = text(100, 70, 'Dreaming as the summers die,', 28, "Renogare", BLACK)
     x = WIDTH / 2 - text02.getText().get_width() / 2
     y = HEIGHT / 2 - text02.getText().get_height() / 2 - 150
@@ -2212,9 +2370,6 @@ def cutscene02():
 
     screen.blit(text02.getText(), text02.gettextpos())
 
-def cutscene03():
-    global start_ticks
-    global prog_start
 
     text03 = text(100, 70, 'Ever drifting down the stream, Lingering in the golden gleam, ', 28, "Renogare", BLACK)
     x = WIDTH / 2 - text03.getText().get_width() / 2
@@ -2252,9 +2407,6 @@ def cutscene03():
 
     screen.blit(text03.getText(), text03.gettextpos())
 
-def cutscene04():
-    global start_ticks
-    global prog_start
 
     text04 = text(100, 70, 'Life, what is it but a dream?"', 28, "Renogare", BLACK)
     x = WIDTH / 2 - text04.getText().get_width() / 2
@@ -2293,11 +2445,9 @@ def cutscene04():
 
     screen.blit(text04.getText(), text04.gettextpos())
 
-def cutscene05():
-    global start_ticks
+
     global section_area
     global cutscenelevel
-    global prog_start
 
     text05 = text(100, 70, '-Lewis Carroll, Through the Looking Glass', 26, "Renogare", BLACK)
     x = WIDTH / 2 - text05.getText().get_width() / 2
@@ -2334,15 +2484,24 @@ def cutscene05():
         text05.textsetColor(BLACK)
         section_area = 0
         cutscenelevel = 0
+        prog_start = -1
 
 
     screen.blit(text05.getText(), text05.gettextpos())
+
+    text19 = text(100, 70, 'Click anywhere to continue', 30, "Renogare", BLACK)
+    text19.textsetColor(WHITE)
+    text19.textsetpos(WIDTH - text19.getText().get_width() - 20, HEIGHT - text19.getText().get_height() - 20)
+
+    screen.blit(text19.getText(), text19.gettextpos())
 
 
 # Outtro
 ### outro\\
 
-def cutscene06():
+def cutscene02():
+    global start_ticks
+    global prog_start
 
     text06 = text(100, 70, "You're home! Welcome back.", 32, "Renogare", WHITE)
     x = WIDTH / 2 - text06.getText().get_width() / 2
@@ -2350,367 +2509,353 @@ def cutscene06():
 
     text06.textsetpos(x, y)
 
-    start_ticks = pygame.time.get_ticks()
 
-    if start_ticks / 1000 > 1.1:
+    if (start_ticks - prog_start) / 1000 > 1.1:
         text06.textsetColor(WHITE)
-    if start_ticks / 1000 > 1.25:
+    if (start_ticks - prog_start) / 1000 > 1.25:
         text06.textsetColor(cs3)
-    if start_ticks / 1000 > 1.4:
+    if (start_ticks - prog_start) / 1000 > 1.4:
         text06.textsetColor(cs2)
-    if start_ticks / 1000 > 1.55:
+    if (start_ticks - prog_start) / 1000 > 1.55:
         text06.textsetColor(cs1)
-    if start_ticks / 1000 > 1.7:
+    if (start_ticks - prog_start) / 1000 > 1.7:
         text06.textsetColor(cs0)
-    if start_ticks / 1000 > 1.85:
+    if (start_ticks - prog_start) / 1000 > 1.85:
         text06.textsetColor(cs)
-    if start_ticks / 1000 > 2.10:
+    if (start_ticks - prog_start) / 1000 > 2.10:
         text06.textsetColor(BLACK)
 
-    if start_ticks / 1000 > 5.1:
+    if (start_ticks - prog_start) / 1000 > 5.1:
         text06.textsetColor(BLACK)
-    if start_ticks / 1000 > 5.25:
+    if (start_ticks - prog_start) / 1000 > 5.25:
         text06.textsetColor(cs)
-    if start_ticks / 1000 > 5.4:
+    if (start_ticks - prog_start) / 1000 > 5.4:
         text06.textsetColor(cs0)
-    if start_ticks / 1000 > 5.55:
+    if (start_ticks - prog_start) / 1000 > 5.55:
         text06.textsetColor(cs1)
-    if start_ticks / 1000 > 5.7:
+    if (start_ticks - prog_start) / 1000 > 5.7:
         text06.textsetColor(cs2)
-    if start_ticks / 1000 > 5.85:
+    if (start_ticks - prog_start) / 1000 > 5.85:
         text06.textsetColor(cs3)
-    if start_ticks / 1000 > 6.10:
+    if (start_ticks - prog_start) / 1000 > 6.10:
         text06.textsetColor(WHITE)
 
-    screen.blit(text06.getText(), text06.gettextpos())
+    if (start_ticks - prog_start) / 1000 > 1.1 and (start_ticks - prog_start) / 1000 <= 6.10:
+        screen.blit(text06.getText(), text06.gettextpos())
 
-def cutscene07():
-
-    text07 = text(100, 70, 'Anna: ...', 40, "Renogare", WHITE)
+    text07 = text(100, 70, '...', 40, "Renogare", WHITE)
     x = WIDTH / 2 - text07.getText().get_width() / 2
     y = HEIGHT / 2 - text07.getText().get_height() / 2
     text07.textsetpos(x, y)
 
-    start_ticks = pygame.time.get_ticks()
 
-    if start_ticks / 1000 > 8.1:
+    if (start_ticks - prog_start) / 1000 > 8.1:
         text07.textsetColor(WHITE)
-    if start_ticks / 1000 > 8.25:
+    if (start_ticks - prog_start) / 1000 > 8.25:
         text07.textsetColor(cs3)
-    if start_ticks / 1000 > 8.4:
+    if (start_ticks - prog_start) / 1000 > 8.4:
         text07.textsetColor(cs2)
-    if start_ticks / 1000 > 8.55:
+    if (start_ticks - prog_start) / 1000 > 8.55:
         text07.textsetColor(cs1)
-    if start_ticks / 1000 > 8.7:
+    if (start_ticks - prog_start) / 1000 > 8.7:
         text07.textsetColor(cs0)
-    if start_ticks / 1000 > 8.85:
+    if (start_ticks - prog_start) / 1000 > 8.85:
         text07.textsetColor(cs)
-    if start_ticks / 1000 > 9.10:
+    if (start_ticks - prog_start) / 1000 > 9.10:
         text07.textsetColor(BLACK)
 
-    if start_ticks / 1000 > 11.1:
+    if (start_ticks - prog_start) / 1000 > 11.1:
         text07.textsetColor(BLACK)
-    if start_ticks / 1000 > 11.25:
+    if (start_ticks - prog_start) / 1000 > 11.25:
         text07.textsetColor(cs)
-    if start_ticks / 1000 > 11.4:
+    if (start_ticks - prog_start) / 1000 > 11.4:
         text07.textsetColor(cs0)
-    if start_ticks / 1000 > 11.55:
+    if (start_ticks - prog_start) / 1000 > 11.55:
         text07.textsetColor(cs1)
-    if start_ticks / 1000 > 11.7:
+    if (start_ticks - prog_start) / 1000 > 11.7:
         text07.textsetColor(cs2)
-    if start_ticks / 1000 > 11.85:
+    if (start_ticks - prog_start) / 1000 > 11.85:
         text07.textsetColor(cs3)
-    if start_ticks / 1000 > 12.10:
+    if (start_ticks - prog_start)/ 1000 > 12.10:
         text07.textsetColor(WHITE)
 
-    screen.blit(text07.getText(), text07.gettextpos())
-
-def cutscene08():
+    if (start_ticks - prog_start) / 1000 > 8.1 and (start_ticks - prog_start) / 1000 <= 12.10:
+        screen.blit(text07.getText(), text07.gettextpos())
 
     text08 = text(100, 70, 'We miss you so much', 40, "Renogare", WHITE)
     x = WIDTH / 2 - text08.getText().get_width() / 2
     y = HEIGHT / 2 - text08.getText().get_height() / 2
     text08.textsetpos(x, y)
 
-    start_ticks = pygame.time.get_ticks()
 
-    if start_ticks / 1000 > 14.1:
+    if (start_ticks - prog_start) / 1000 > 14.1:
         text08.textsetColor(WHITE)
-    if start_ticks / 1000 > 14.25:
+    if (start_ticks - prog_start) / 1000 > 14.25:
         text08.textsetColor(cs3)
-    if start_ticks / 1000 > 14.4:
+    if (start_ticks - prog_start) / 1000 > 14.4:
         text08.textsetColor(cs2)
-    if start_ticks / 1000 > 14.55:
+    if (start_ticks - prog_start) / 1000 > 14.55:
         text08.textsetColor(cs1)
-    if start_ticks / 1000 > 14.7:
+    if (start_ticks - prog_start) / 1000 > 14.7:
         text08.textsetColor(cs0)
-    if start_ticks / 1000 > 14.85:
+    if (start_ticks - prog_start) / 1000 > 14.85:
         text08.textsetColor(cs)
-    if start_ticks / 1000 > 15.10:
+    if (start_ticks - prog_start) / 1000 > 15.10:
         text08.textsetColor(BLACK)
 
-    if start_ticks / 1000 > 18.1:
+    if (start_ticks - prog_start) / 1000 > 18.1:
         text08.textsetColor(BLACK)
-    if start_ticks / 1000 > 18.25:
+    if (start_ticks - prog_start) / 1000 > 18.25:
         text08.textsetColor(cs)
-    if start_ticks / 1000 > 18.4:
+    if (start_ticks - prog_start) / 1000 > 18.4:
         text08.textsetColor(cs0)
-    if start_ticks / 1000 > 18.55:
+    if (start_ticks - prog_start) / 1000 > 18.55:
         text08.textsetColor(cs1)
-    if start_ticks / 1000 > 18.7:
+    if (start_ticks - prog_start) / 1000 > 18.7:
         text08.textsetColor(cs2)
-    if start_ticks / 1000 > 18.85:
+    if (start_ticks - prog_start) / 1000 > 18.85:
         text08.textsetColor(cs3)
-    if start_ticks / 1000 > 18.10:
+    if (start_ticks - prog_start) / 1000 > 18.10:
         text08.textsetColor(WHITE)
 
-    screen.blit(text08.getText(), text08.gettextpos())
+    if (start_ticks - prog_start) / 1000 > 14.1 and (start_ticks - prog_start) / 1000 <= 18.10:
+        screen.blit(text08.getText(), text08.gettextpos())
 
-def cutscene09():
 
-    text09 = text(100, 70, 'Anna: ...', 40, "Renogare", WHITE)
+    text09 = text(100, 70, '...', 40, "Renogare", WHITE)
     x = WIDTH / 2 - text09.getText().get_width() / 2
     y = HEIGHT / 2 - text09.getText().get_height() / 2
     text09.textsetpos(x, y)
 
-    start_ticks = pygame.time.get_ticks()
-
-    if start_ticks / 1000 > 20.1:
+    if (start_ticks - prog_start) / 1000 > 20.1:
         text09.textsetColor(WHITE)
-    if start_ticks / 1000 > 20.25:
+    if (start_ticks - prog_start) / 1000 > 20.25:
         text09.textsetColor(cs3)
-    if start_ticks / 1000 > 20.4:
+    if (start_ticks - prog_start) / 1000 > 20.4:
         text09.textsetColor(cs2)
-    if start_ticks / 1000 > 20.55:
+    if (start_ticks - prog_start) / 1000 > 20.55:
         text09.textsetColor(cs1)
-    if start_ticks / 1000 > 20.7:
+    if (start_ticks - prog_start) / 1000 > 20.7:
         text09.textsetColor(cs0)
-    if start_ticks / 1000 > 20.85:
+    if (start_ticks - prog_start) / 1000 > 20.85:
         text09.textsetColor(cs)
-    if start_ticks / 1000 > 21.10:
+    if (start_ticks - prog_start) / 1000 > 21.10:
         text09.textsetColor(BLACK)
 
-    if start_ticks / 1000 > 23.1:
+    if (start_ticks - prog_start) / 1000 > 23.1:
         text09.textsetColor(BLACK)
-    if start_ticks / 1000 > 23.25:
+    if (start_ticks - prog_start) / 1000 > 23.25:
         text09.textsetColor(cs)
-    if start_ticks / 1000 > 23.4:
+    if (start_ticks - prog_start) / 1000 > 23.4:
         text09.textsetColor(cs0)
-    if start_ticks / 1000 > 23.55:
+    if (start_ticks - prog_start) / 1000 > 23.55:
         text09.textsetColor(cs1)
-    if start_ticks / 1000 > 23.7:
+    if (start_ticks - prog_start) / 1000 > 23.7:
         text09.textsetColor(cs2)
-    if start_ticks / 1000 > 23.85:
+    if (start_ticks - prog_start) / 1000 > 23.85:
         text09.textsetColor(cs3)
-    if start_ticks / 1000 > 24.10:
+    if (start_ticks - prog_start) / 1000 > 24.10:
         text09.textsetColor(WHITE)
 
-    screen.blit(text09.getText(), text09.gettextpos())
+    if (start_ticks - prog_start) / 1000 > 20.1 and (start_ticks - prog_start) / 1000 <= 24.10:
+        screen.blit(text09.getText(), text09.gettextpos())
 
-def cutscene10():
 
     text10 = text(100, 70, 'We think of you everyday', 40, "Renogare", WHITE)
     x = WIDTH / 2 - text10.getText().get_width() / 2
     y = HEIGHT / 2 - text10.getText().get_height() / 2
     text10.textsetpos(x, y)
 
-    start_ticks = pygame.time.get_ticks()
 
-    if start_ticks / 1000 > 26.1:
+    if (start_ticks - prog_start) / 1000 > 26.1:
         text10.textsetColor(WHITE)
-    if start_ticks / 1000 > 26.25:
+    if (start_ticks - prog_start) / 1000 > 26.25:
         text10.textsetColor(cs3)
-    if start_ticks / 1000 > 26.4:
+    if (start_ticks - prog_start) / 1000 > 26.4:
         text10.textsetColor(cs2)
-    if start_ticks / 1000 > 26.55:
+    if (start_ticks - prog_start) / 1000 > 26.55:
         text10.textsetColor(cs1)
-    if start_ticks / 1000 > 26.7:
+    if (start_ticks - prog_start) / 1000 > 26.7:
         text10.textsetColor(cs0)
-    if start_ticks / 1000 > 26.85:
+    if (start_ticks - prog_start) / 1000 > 26.85:
         text10.textsetColor(cs)
-    if start_ticks / 1000 > 27.10:
+    if (start_ticks - prog_start)/ 1000 > 27.10:
         text10.textsetColor(BLACK)
 
-    if start_ticks / 1000 > 29.1:
+    if (start_ticks - prog_start) / 1000 > 29.1:
         text10.textsetColor(BLACK)
-    if start_ticks / 1000 > 29.25:
+    if (start_ticks - prog_start) / 1000 > 29.25:
         text10.textsetColor(cs)
-    if start_ticks / 1000 > 29.4:
+    if (start_ticks - prog_start) / 1000 > 29.4:
         text10.textsetColor(cs0)
-    if start_ticks / 1000 > 29.55:
+    if (start_ticks - prog_start) / 1000 > 29.55:
         text10.textsetColor(cs1)
-    if start_ticks / 1000 > 29.7:
+    if (start_ticks - prog_start) / 1000 > 29.7:
         text10.textsetColor(cs2)
-    if start_ticks / 1000 > 29.85:
+    if (start_ticks - prog_start) / 1000 > 29.85:
         text10.textsetColor(cs3)
-    if start_ticks / 1000 > 30.10:
+    if (start_ticks - prog_start) / 1000 > 30.10:
         text10.textsetColor(WHITE)
 
-    screen.blit(text10.getText(), text10.gettextpos())
+    if (start_ticks - prog_start) / 1000 > 26.1 and (start_ticks - prog_start) / 1000 <= 30.10:
+        screen.blit(text10.getText(), text10.gettextpos())
 
-def cutscene11():
 
-    text11 = text(100, 70, 'Thinking you might come and play with us', 40, "Renogare", WHITE)
+    text11 = text(100, 70, 'Thinking you might come and play with us...', 40, "Renogare", WHITE)
     x = WIDTH / 2 - text11.getText().get_width() / 2
     y = HEIGHT / 2 - text11.getText().get_height() / 2
     text11.textsetpos(x, y)
 
-    start_ticks = pygame.time.get_ticks()
 
-    if start_ticks / 1000 > 32.1:
+    if (start_ticks - prog_start) / 1000 > 32.1:
         text11.textsetColor(WHITE)
-    if start_ticks / 1000 > 32.25:
+    if (start_ticks - prog_start) / 1000 > 32.25:
         text11.textsetColor(cs3)
-    if start_ticks / 1000 > 32.4:
+    if (start_ticks - prog_start) / 1000 > 32.4:
         text11.textsetColor(cs2)
-    if start_ticks / 1000 > 32.55:
+    if (start_ticks - prog_start) / 1000 > 32.55:
         text11.textsetColor(cs1)
-    if start_ticks / 1000 > 32.7:
+    if (start_ticks - prog_start) / 1000 > 32.7:
         text11.textsetColor(cs0)
-    if start_ticks / 1000 > 32.85:
+    if (start_ticks - prog_start) / 1000 > 32.85:
         text11.textsetColor(cs)
-    if start_ticks / 1000 > 33.10:
+    if (start_ticks - prog_start) / 1000 > 33.10:
         text11.textsetColor(BLACK)
 
-    if start_ticks / 1000 > 35.1:
+    if (start_ticks - prog_start) / 1000 > 35.1:
         text11.textsetColor(BLACK)
-    if start_ticks / 1000 > 35.25:
+    if (start_ticks - prog_start) / 1000 > 35.25:
         text11.textsetColor(cs)
-    if start_ticks / 1000 > 35.4:
+    if (start_ticks - prog_start) / 1000 > 35.4:
         text11.textsetColor(cs0)
-    if start_ticks / 1000 > 35.55:
+    if (start_ticks - prog_start) / 1000 > 35.55:
         text11.textsetColor(cs1)
-    if start_ticks / 1000 > 35.7:
+    if (start_ticks - prog_start) / 1000 > 35.7:
         text11.textsetColor(cs2)
-    if start_ticks / 1000 > 35.85:
+    if (start_ticks - prog_start) / 1000 > 35.85:
         text11.textsetColor(cs3)
-    if start_ticks / 1000 > 36.10:
+    if (start_ticks - prog_start) / 1000 > 36.10:
         text11.textsetColor(WHITE)
 
-    screen.blit(text11.getText(), text11.gettextpos())
+    if (start_ticks - prog_start) / 1000 > 32.1 and (start_ticks - prog_start) / 1000 <= 36.10:
+        screen.blit(text11.getText(), text11.gettextpos())
 
-def cutscene12():
-    text12 = text(100, 70, 'Anna: ...', 40, "Renogare", WHITE)
+    text12 = text(100, 70, '...', 40, "Renogare", WHITE)
     x = WIDTH / 2 - text12.getText().get_width() / 2
     y = HEIGHT / 2 - text12.getText().get_height() / 2
     text12.textsetpos(x, y)
 
-    start_ticks = pygame.time.get_ticks()
-
-    if start_ticks / 1000 > 38.1:
+    if (start_ticks - prog_start) / 1000 > 38.1:
         text12.textsetColor(WHITE)
-    if start_ticks / 1000 > 38.25:
+    if (start_ticks - prog_start) / 1000 > 38.25:
         text12.textsetColor(cs3)
-    if start_ticks / 1000 > 38.4:
+    if (start_ticks - prog_start) / 1000 > 38.4:
         text12.textsetColor(cs2)
-    if start_ticks / 1000 > 38.55:
+    if (start_ticks - prog_start) / 1000 > 38.55:
         text12.textsetColor(cs1)
-    if start_ticks / 1000 > 38.7:
+    if (start_ticks - prog_start) / 1000 > 38.7:
         text12.textsetColor(cs0)
-    if start_ticks / 1000 > 38.85:
+    if (start_ticks - prog_start) / 1000 > 38.85:
         text12.textsetColor(cs)
-    if start_ticks / 1000 > 39.10:
+    if (start_ticks - prog_start) / 1000 > 39.10:
         text12.textsetColor(BLACK)
 
-    if start_ticks / 1000 > 41.1:
+    if (start_ticks - prog_start) / 1000 > 41.1:
         text12.textsetColor(BLACK)
-    if start_ticks / 1000 > 41.25:
+    if (start_ticks - prog_start) / 1000 > 41.25:
         text12.textsetColor(cs)
-    if start_ticks / 1000 > 41.4:
+    if (start_ticks - prog_start) / 1000 > 41.4:
         text12.textsetColor(cs0)
-    if start_ticks / 1000 > 41.55:
+    if (start_ticks - prog_start) / 1000 > 41.55:
         text12.textsetColor(cs1)
-    if start_ticks / 1000 > 41.7:
+    if (start_ticks - prog_start) / 1000 > 41.7:
         text12.textsetColor(cs2)
-    if start_ticks / 1000 > 41.85:
+    if (start_ticks - prog_start) / 1000 > 41.85:
         text12.textsetColor(cs3)
-    if start_ticks / 1000 > 42.10:
+    if (start_ticks - prog_start) / 1000 > 42.10:
         text12.textsetColor(WHITE)
 
-    screen.blit(text12.getText(), text12.gettextpos())
+    if (start_ticks - prog_start) / 1000 > 38.1 and (start_ticks - prog_start) / 1000 <= 42.10:
+        screen.blit(text12.getText(), text12.gettextpos())
 
-def cutscene13():
     text13 = text(100, 70, "Don't you leave me ever again!", 40, "Renogare", WHITE)
     x = WIDTH / 2 - text13.getText().get_width() / 2
     y = HEIGHT / 2 - text13.getText().get_height() / 2
     text13.textsetpos(x, y)
 
-    start_ticks = pygame.time.get_ticks()
 
-    if start_ticks / 1000 > 44.1:
+    if (start_ticks - prog_start) / 1000 > 44.1:
         text13.textsetColor(WHITE)
-    if start_ticks / 1000 > 44.25:
+    if (start_ticks - prog_start) / 1000 > 44.25:
         text13.textsetColor(cs3)
-    if start_ticks / 1000 > 44.4:
+    if (start_ticks - prog_start) / 1000 > 44.4:
         text13.textsetColor(cs2)
-    if start_ticks / 1000 > 44.55:
+    if (start_ticks - prog_start) / 1000 > 44.55:
         text13.textsetColor(cs1)
-    if start_ticks / 1000 > 44.7:
+    if (start_ticks - prog_start) / 1000 > 44.7:
         text13.textsetColor(cs0)
-    if start_ticks / 1000 > 44.85:
+    if (start_ticks - prog_start) / 1000 > 44.85:
         text13.textsetColor(cs)
-    if start_ticks / 1000 > 45.10:
+    if (start_ticks - prog_start) / 1000 > 45.10:
         text13.textsetColor(BLACK)
 
-    if start_ticks / 1000 > 47.1:
+    if (start_ticks - prog_start) / 1000 > 47.1:
         text13.textsetColor(BLACK)
-    if start_ticks / 1000 > 47.25:
+    if (start_ticks - prog_start) / 1000 > 47.25:
         text13.textsetColor(cs)
-    if start_ticks / 1000 > 47.4:
+    if (start_ticks - prog_start) / 1000 > 47.4:
         text13.textsetColor(cs0)
-    if start_ticks / 1000 > 47.55:
+    if (start_ticks - prog_start) / 1000 > 47.55:
         text13.textsetColor(cs1)
-    if start_ticks / 1000 > 47.7:
+    if (start_ticks - prog_start) / 1000 > 47.7:
         text13.textsetColor(cs2)
-    if start_ticks / 1000 > 47.85:
+    if (start_ticks - prog_start) / 1000 > 47.85:
         text13.textsetColor(cs3)
-    if start_ticks / 1000 > 48.10:
+    if (start_ticks - prog_start) / 1000 > 48.10:
         text13.textsetColor(WHITE)
 
-    screen.blit(text13.getText(), text13.gettextpos())
+    if (start_ticks - prog_start) / 1000 > 44.1 and (start_ticks - prog_start) / 1000 <= 48.10:
+        screen.blit(text13.getText(), text13.gettextpos())
 
-def cutscene14():
-    text14 = text(100, 70, 'Anna: ...', 40, "Renogare", WHITE)
+    text14 = text(100, 70, '...', 40, "Renogare", WHITE)
     x = WIDTH / 2 - text14.getText().get_width() / 2
     y = HEIGHT / 2 - text14.getText().get_height() / 2
     text14.textsetpos(x, y)
 
-    start_ticks = pygame.time.get_ticks()
 
-    if start_ticks / 1000 > 50.1:
+    if (start_ticks - prog_start) / 1000 > 50.1:
         text14.textsetColor(WHITE)
-    if start_ticks / 1000 > 50.25:
+    if (start_ticks - prog_start) / 1000 > 50.25:
         text14.textsetColor(cs3)
-    if start_ticks / 1000 > 50.4:
+    if (start_ticks - prog_start) / 1000 > 50.4:
         text14.textsetColor(cs2)
-    if start_ticks / 1000 > 50.55:
+    if (start_ticks - prog_start) / 1000 > 50.55:
         text14.textsetColor(cs1)
-    if start_ticks / 1000 > 50.7:
+    if (start_ticks - prog_start) / 1000 > 50.7:
         text14.textsetColor(cs0)
-    if start_ticks / 1000 > 50.85:
+    if (start_ticks - prog_start) / 1000 > 50.85:
         text14.textsetColor(cs)
-    if start_ticks / 1000 > 51.10:
+    if (start_ticks - prog_start) / 1000 > 51.10:
         text14.textsetColor(BLACK)
 
-    if start_ticks / 1000 > 53.1:
+    if (start_ticks - prog_start) / 1000 > 53.1:
         text14.textsetColor(BLACK)
-    if start_ticks / 1000 > 53.25:
+    if (start_ticks - prog_start) / 1000 > 53.25:
         text14.textsetColor(cs)
-    if start_ticks / 1000 > 53.4:
+    if (start_ticks - prog_start) / 1000 > 53.4:
         text14.textsetColor(cs0)
-    if start_ticks / 1000 > 53.55:
+    if (start_ticks - prog_start) / 1000 > 53.55:
         text14.textsetColor(cs1)
-    if start_ticks / 1000 > 53.7:
+    if (start_ticks - prog_start) / 1000 > 53.7:
         text14.textsetColor(cs2)
-    if start_ticks / 1000 > 53.85:
+    if (start_ticks - prog_start) / 1000 > 53.85:
         text14.textsetColor(cs3)
-    if start_ticks / 1000 > 55.10:
+    if (start_ticks - prog_start)/ 1000 > 55.10:
         text14.textsetColor(WHITE)
 
-    screen.blit(text14.getText(), text14.gettextpos())
+    if (start_ticks - prog_start) / 1000 > 50.1 and (start_ticks - prog_start) / 1000 <= 55.10:
+        screen.blit(text14.getText(), text14.gettextpos())
 
-
-def cutscene15():
     global section_area
     global cutscenelevel
 
@@ -2719,45 +2864,1131 @@ def cutscene15():
     y = HEIGHT / 2 - text15.getText().get_height() / 2
     text15.textsetpos(x, y)
 
-    start_ticks = pygame.time.get_ticks()
 
-    if start_ticks / 1000 > 57.1:
+    if (start_ticks - prog_start) / 1000 > 57.1:
         text15.textsetColor(WHITE)
-    if start_ticks / 1000 > 57.25:
+    if (start_ticks - prog_start) / 1000 > 57.25:
         text15.textsetColor(cs3)
-    if start_ticks / 1000 > 57.4:
+    if (start_ticks - prog_start) / 1000 > 57.4:
         text15.textsetColor(cs2)
-    if start_ticks / 1000 > 57.55:
+    if (start_ticks - prog_start) / 1000 > 57.55:
         text15.textsetColor(cs1)
-    if start_ticks / 1000 > 57.7:
+    if (start_ticks - prog_start) / 1000 > 57.7:
         text15.textsetColor(cs0)
-    if start_ticks / 1000 > 57.85:
+    if (start_ticks - prog_start)/ 1000 > 57.85:
         text15.textsetColor(cs)
-    if start_ticks / 1000 > 58.10:
+    if (start_ticks - prog_start) / 1000 > 58.10:
         text15.textsetColor(BLACK)
 
-    if start_ticks / 1000 > 60.1:
+    if (start_ticks - prog_start) / 1000 > 60.1:
         text15.textsetColor(BLACK)
-    if start_ticks / 1000 > 60.25:
+    if (start_ticks - prog_start) / 1000 > 60.25:
         text15.textsetColor(cs)
-    if start_ticks / 1000 > 60.4:
+    if (start_ticks - prog_start) / 1000 > 60.4:
         text15.textsetColor(cs0)
-    if start_ticks / 1000 > 60.55:
+    if (start_ticks - prog_start) / 1000 > 60.55:
         text15.textsetColor(cs1)
-    if start_ticks / 1000 > 60.7:
+    if (start_ticks - prog_start) / 1000 > 60.7:
         text15.textsetColor(cs2)
-    if start_ticks / 1000 > 60.85:
+    if (start_ticks - prog_start) / 1000 > 60.85:
         text15.textsetColor(cs3)
-    if start_ticks / 1000 > 61.10:
+    if (start_ticks - prog_start) / 1000 > 61.10:
         text15.textsetColor(WHITE)
-        cutscenelevel = 3
+        cutscenelevel = 4
         section_area = -1
+        prog_start = -1
 
-    screen.blit(text15.getText(), text15.gettextpos())
+    if (start_ticks - prog_start) / 1000 > 57.1 and (start_ticks - prog_start) / 1000 <= 61.10:
+        screen.blit(text15.getText(), text15.gettextpos())
+
+def cutscene03():
+    global start_ticks
+    global prog_start
+
+    text01 = text(WIDTH/2, 400, 'To be continued', 50, "Renogare", BLACK)
+    text01.textsetpos(WIDTH/2 - text01.getText().get_width()/2, HEIGHT/2 - text01.getText().get_height())
+
+
+    if (start_ticks - prog_start)/1000 > 1.1:
+        text01.textsetColor(cs)
+    if (start_ticks - prog_start)/1000 > 1.25:
+        text01.textsetColor(cs0)
+    if (start_ticks - prog_start)/1000 > 1.4:
+        text01.textsetColor(cs1)
+    if (start_ticks - prog_start)/1000 > 1.55:
+        text01.textsetColor(cs2)
+    if (start_ticks - prog_start)/1000 > 1.7:
+        text01.textsetColor(cs3)
+    if (start_ticks - prog_start)/1000 > 1.85:
+        text01.textsetColor(WHITE)
+
+    if (start_ticks - prog_start) / 1000 > 5.1:
+        text01.textsetColor(cs3)
+    if (start_ticks - prog_start) / 1000 > 5.25:
+        text01.textsetColor(cs2)
+    if (start_ticks - prog_start) / 1000 > 5.4:
+        text01.textsetColor(cs1)
+    if (start_ticks - prog_start) / 1000 > 5.55:
+        text01.textsetColor(cs0)
+    if (start_ticks - prog_start) / 1000 > 5.7:
+        text01.textsetColor(cs)
+    if (start_ticks - prog_start) / 1000 > 5.85:
+        text01.textsetColor(BLACK)
+
+    if (start_ticks - prog_start) / 1000 <= 5.85:
+        screen.blit(text01.getText(), text01.gettextpos())
+
+
+    text02 = text(100, 70, 'Producers', 28, "Renogare", BLACK)
+    text02.textsetpos(WIDTH / 2 - text02.getText().get_width()/2, HEIGHT / 2 - text02.getText().get_height())
+
+
+    if (start_ticks - prog_start) / 1000 > 9.1:
+        text02.textsetColor(cs)
+    if (start_ticks - prog_start) / 1000 > 9.25:
+        text02.textsetColor(cs0)
+    if (start_ticks - prog_start) / 1000 > 9.4:
+        text02.textsetColor(cs1)
+    if (start_ticks - prog_start) / 1000 > 9.55:
+        text02.textsetColor(cs2)
+    if (start_ticks - prog_start) / 1000 > 9.7:
+        text02.textsetColor(cs3)
+    if (start_ticks - prog_start)/ 1000 > 9.85:
+        text02.textsetColor(WHITE)
+
+    if (start_ticks - prog_start) / 1000 > 13.1:
+        text02.textsetColor(cs3)
+    if (start_ticks - prog_start) / 1000 > 13.25:
+        text02.textsetColor(cs2)
+    if (start_ticks - prog_start) / 1000 > 13.4:
+        text02.textsetColor(cs1)
+    if (start_ticks - prog_start) / 1000 > 13.55:
+        text02.textsetColor(cs0)
+    if (start_ticks - prog_start) / 1000 > 13.7:
+        text02.textsetColor(cs)
+    if (start_ticks - prog_start) / 1000 > 13.85:
+        text02.textsetColor(BLACK)
+
+    textt02 = text(100, 70, 'LONG TIEU and WAYNE SETO', 50, "Renogare", BLACK)
+    textt02.textsetpos(WIDTH / 2 - textt02.getText().get_width()/2, text02.y + text02.getText().get_height() + 10)
+
+    if (start_ticks - prog_start) / 1000 > 9.1:
+        textt02.textsetColor(cs)
+    if (start_ticks - prog_start) / 1000 > 9.25:
+        textt02.textsetColor(cs0)
+    if (start_ticks - prog_start) / 1000 > 9.4:
+        textt02.textsetColor(cs1)
+    if (start_ticks - prog_start) / 1000 > 9.55:
+        textt02.textsetColor(cs2)
+    if (start_ticks - prog_start) / 1000 > 9.7:
+        textt02.textsetColor(cs3)
+    if (start_ticks - prog_start) / 1000 > 9.85:
+        textt02.textsetColor(WHITE)
+
+    if (start_ticks - prog_start) / 1000 > 13.1:
+        textt02.textsetColor(cs3)
+    if (start_ticks - prog_start) / 1000 > 13.25:
+        textt02.textsetColor(cs2)
+    if (start_ticks - prog_start) / 1000 > 13.4:
+        textt02.textsetColor(cs1)
+    if (start_ticks - prog_start) / 1000 > 13.55:
+        textt02.textsetColor(cs0)
+    if (start_ticks - prog_start) / 1000 > 13.7:
+        textt02.textsetColor(cs)
+    if (start_ticks - prog_start) / 1000 > 13.85:
+        textt02.textsetColor(BLACK)
+
+    if (start_ticks - prog_start) / 1000 <= 13.85 and (start_ticks - prog_start) / 1000 > 5.85:
+        screen.blit(text02.getText(), text02.gettextpos())
+        screen.blit(textt02.getText(), textt02.gettextpos())
+
+
+    text03 = text(100, 70, 'Pixel Arts', 28, "Renogare", BLACK)
+    text03.textsetpos(WIDTH / 2 - text03.getText().get_width()/2, HEIGHT / 2 - text03.getText().get_height())
+
+
+    if (start_ticks - prog_start) / 1000 > 17.1:
+        text03.textsetColor(cs)
+    if (start_ticks - prog_start) / 1000 > 17.25:
+        text03.textsetColor(cs0)
+    if (start_ticks - prog_start) / 1000 > 17.4:
+        text03.textsetColor(cs1)
+    if (start_ticks - prog_start) / 1000 > 17.55:
+        text03.textsetColor(cs2)
+    if (start_ticks - prog_start) / 1000 > 17.7:
+        text03.textsetColor(cs3)
+    if (start_ticks - prog_start) / 1000 > 17.85:
+        text03.textsetColor(WHITE)
+
+    if (start_ticks - prog_start) / 1000 > 21.1:
+        text03.textsetColor(cs3)
+    if (start_ticks - prog_start) / 1000 > 21.25:
+        text03.textsetColor(cs2)
+    if (start_ticks - prog_start) / 1000 > 21.4:
+        text03.textsetColor(cs1)
+    if (start_ticks - prog_start) / 1000 > 21.55:
+        text03.textsetColor(cs0)
+    if (start_ticks - prog_start) / 1000 > 21.7:
+        text03.textsetColor(cs)
+    if (start_ticks - prog_start) / 1000 > 21.85:
+        text03.textsetColor(BLACK)
+
+    textt03 = text(100, 70, 'LONG TIEU', 50, "Renogare", BLACK)
+    textt03.textsetpos(WIDTH / 2 - textt03.getText().get_width()/2, text03.y + text03.getText().get_height() + 10)
+
+    if (start_ticks - prog_start) / 1000 > 17.1:
+        textt03.textsetColor(cs)
+    if (start_ticks - prog_start) / 1000 > 17.25:
+        textt03.textsetColor(cs0)
+    if (start_ticks - prog_start) / 1000 > 17.4:
+        textt03.textsetColor(cs1)
+    if (start_ticks - prog_start) / 1000 > 17.55:
+        textt03.textsetColor(cs2)
+    if (start_ticks - prog_start) / 1000 > 17.7:
+        textt03.textsetColor(cs3)
+    if (start_ticks - prog_start) / 1000 > 17.85:
+        textt03.textsetColor(WHITE)
+
+    if (start_ticks - prog_start) / 1000 > 21.1:
+        textt03.textsetColor(cs3)
+    if (start_ticks - prog_start) / 1000 > 21.25:
+        textt03.textsetColor(cs2)
+    if (start_ticks - prog_start) / 1000 > 21.4:
+        textt03.textsetColor(cs1)
+    if (start_ticks - prog_start) / 1000 > 21.55:
+        textt03.textsetColor(cs0)
+    if (start_ticks - prog_start) / 1000 > 21.7:
+        textt03.textsetColor(cs)
+    if (start_ticks - prog_start) / 1000 > 21.85:
+        textt03.textsetColor(BLACK)
+
+    if (start_ticks - prog_start) / 1000 <= 21.85 and (start_ticks - prog_start) / 1000 > 17.85:
+        screen.blit(text03.getText(), text03.gettextpos())
+        screen.blit(textt03.getText(), textt03.gettextpos())
+
+
+    text04 = text(100, 70, 'Background Arts', 28, "Renogare", BLACK)
+    text04.textsetpos(WIDTH / 2 - text04.getText().get_width()/2, HEIGHT / 2 - text04.getText().get_height())
+
+
+    if (start_ticks - prog_start) / 1000 > 25.1:
+        text04.textsetColor(cs)
+    if (start_ticks - prog_start) / 1000 > 25.25:
+        text04.textsetColor(cs0)
+    if (start_ticks - prog_start) / 1000 > 25.4:
+        text04.textsetColor(cs1)
+    if (start_ticks - prog_start) / 1000 > 25.55:
+        text04.textsetColor(cs2)
+    if (start_ticks - prog_start) / 1000 > 25.7:
+        text04.textsetColor(cs3)
+    if (start_ticks - prog_start) / 1000 > 25.85:
+        text04.textsetColor(WHITE)
+
+    if (start_ticks - prog_start) / 1000 > 29.1:
+        text04.textsetColor(cs3)
+    if (start_ticks - prog_start) / 1000 > 29.25:
+        text04.textsetColor(cs2)
+    if (start_ticks - prog_start) / 1000 > 29.4:
+        text04.textsetColor(cs1)
+    if (start_ticks - prog_start) / 1000 > 29.55:
+        text04.textsetColor(cs0)
+    if (start_ticks - prog_start) / 1000 > 29.7:
+        text04.textsetColor(cs)
+    if (start_ticks - prog_start) / 1000 > 29.85:
+        text04.textsetColor(BLACK)
+
+
+    textt04 = text(100, 70, 'WAYNE SETO', 50, "Renogare", BLACK)
+    textt04.textsetpos(WIDTH / 2 - textt04.getText().get_width()/2, text04.y + text04.getText().get_height() + 10)
+
+    if (start_ticks - prog_start) / 1000 > 25.1:
+        textt04.textsetColor(cs)
+    if (start_ticks - prog_start) / 1000 > 25.25:
+        textt04.textsetColor(cs0)
+    if (start_ticks - prog_start) / 1000 > 25.4:
+        textt04.textsetColor(cs1)
+    if (start_ticks - prog_start) / 1000 > 25.55:
+        textt04.textsetColor(cs2)
+    if (start_ticks - prog_start) / 1000 > 25.7:
+        textt04.textsetColor(cs3)
+    if (start_ticks - prog_start) / 1000 > 25.85:
+        textt04.textsetColor(WHITE)
+
+    if (start_ticks - prog_start) / 1000 > 29.1:
+        textt04.textsetColor(cs3)
+    if (start_ticks - prog_start) / 1000 > 29.25:
+        textt04.textsetColor(cs2)
+    if (start_ticks - prog_start) / 1000 > 29.4:
+        textt04.textsetColor(cs1)
+    if (start_ticks - prog_start) / 1000 > 29.55:
+        textt04.textsetColor(cs0)
+    if (start_ticks - prog_start) / 1000 > 29.7:
+        textt04.textsetColor(cs)
+    if (start_ticks - prog_start) / 1000 > 29.85:
+        textt04.textsetColor(BLACK)
+
+    if (start_ticks - prog_start) / 1000 <= 29.85 and (start_ticks - prog_start) / 1000 > 25.85:
+        screen.blit(text04.getText(), text04.gettextpos())
+        screen.blit(textt04.getText(), textt04.gettextpos())
+
+
+
+    text05 = text(100, 70, 'Map Design', 26, "Renogare", BLACK)
+    text05.textsetpos(WIDTH / 2 - text05.getText().get_width()/2, HEIGHT / 2 - text05.getText().get_height())
+
+
+    if (start_ticks - prog_start) / 1000 > 33.1:
+        text05.textsetColor(cs)
+    if (start_ticks - prog_start) / 1000 > 33.25:
+        text05.textsetColor(cs0)
+    if (start_ticks - prog_start) / 1000 > 33.4:
+        text05.textsetColor(cs1)
+    if (start_ticks - prog_start) / 1000 > 33.55:
+        text05.textsetColor(cs2)
+    if (start_ticks - prog_start) / 1000 > 33.7:
+        text05.textsetColor(cs3)
+    if (start_ticks - prog_start) / 1000 > 33.85:
+        text05.textsetColor(WHITE)
+
+    if (start_ticks - prog_start) / 1000 > 37.1:
+        text05.textsetColor(cs3)
+    if (start_ticks - prog_start) / 1000 > 37.25:
+        text05.textsetColor(cs2)
+    if (start_ticks - prog_start) / 1000 > 37.4:
+        text05.textsetColor(cs1)
+    if (start_ticks - prog_start) / 1000 > 37.55:
+        text05.textsetColor(cs0)
+    if (start_ticks - prog_start) / 1000 > 37.7:
+        text05.textsetColor(cs)
+    if (start_ticks - prog_start) / 1000 > 37.85:
+        text05.textsetColor(BLACK)
+
+
+    textt05 = text(100, 70, 'LONG TIEU', 50, "Renogare", BLACK)
+    textt05.textsetpos(WIDTH / 2 - textt05.getText().get_width()/2, text05.y + text05.getText().get_height() + 10)
+
+    if (start_ticks - prog_start) / 1000 > 29.1:
+        textt05.textsetColor(cs)
+    if (start_ticks - prog_start) / 1000 > 29.25:
+        textt05.textsetColor(cs0)
+    if (start_ticks - prog_start) / 1000 > 29.4:
+        textt05.textsetColor(cs1)
+    if (start_ticks - prog_start) / 1000 > 29.55:
+        textt05.textsetColor(cs2)
+    if (start_ticks - prog_start) / 1000 > 29.7:
+        textt05.textsetColor(cs3)
+    if (start_ticks - prog_start) / 1000 > 29.85:
+        textt05.textsetColor(WHITE)
+
+    if (start_ticks - prog_start) / 1000 > 37.1:
+        textt05.textsetColor(cs3)
+    if (start_ticks - prog_start) / 1000 > 37.25:
+        textt05.textsetColor(cs2)
+    if (start_ticks - prog_start) / 1000 > 37.4:
+        textt05.textsetColor(cs1)
+    if (start_ticks - prog_start) / 1000 > 37.55:
+        textt05.textsetColor(cs0)
+    if (start_ticks - prog_start) / 1000 > 37.7:
+        textt05.textsetColor(cs)
+    if (start_ticks - prog_start) / 1000 > 37.85:
+        textt05.textsetColor(BLACK)
+
+    if (start_ticks - prog_start) / 1000 <= 37.85 and (start_ticks - prog_start) / 1000 > 33.85:
+        screen.blit(text05.getText(), text05.gettextpos())
+        screen.blit(textt05.getText(), textt05.gettextpos())
+
+    text06 = text(100, 70, 'Presentation', 26, "Renogare", BLACK)
+    text06.textsetpos(WIDTH / 2 - text06.getText().get_width()/2, HEIGHT / 2 - text06.getText().get_height())
+
+    if (start_ticks - prog_start) / 1000 > 41.1:
+        text06.textsetColor(cs)
+    if (start_ticks - prog_start) / 1000 > 41.25:
+        text06.textsetColor(cs0)
+    if (start_ticks - prog_start) / 1000 > 41.4:
+        text06.textsetColor(cs1)
+    if (start_ticks - prog_start) / 1000 > 41.55:
+        text06.textsetColor(cs2)
+    if (start_ticks - prog_start) / 1000 > 41.7:
+        text06.textsetColor(cs3)
+    if (start_ticks - prog_start) / 1000 > 41.85:
+        text06.textsetColor(WHITE)
+
+    if (start_ticks - prog_start) / 1000 > 45.1:
+        text06.textsetColor(cs3)
+    if (start_ticks - prog_start) / 1000 > 45.25:
+        text06.textsetColor(cs2)
+    if (start_ticks - prog_start) / 1000 > 45.4:
+        text06.textsetColor(cs1)
+    if (start_ticks - prog_start) / 1000 > 45.55:
+        text06.textsetColor(cs0)
+    if (start_ticks - prog_start) / 1000 > 45.7:
+        text06.textsetColor(cs)
+    if (start_ticks - prog_start) / 1000 > 45.85:
+        text06.textsetColor(BLACK)
+
+    textt06 = text(100, 70, 'WAYNE SETO', 50, "Renogare", BLACK)
+    textt06.textsetpos(WIDTH / 2 - textt06.getText().get_width()/2, text06.y + text06.getText().get_height() + 10)
+
+    if (start_ticks - prog_start) / 1000 > 41.1:
+        textt06.textsetColor(cs)
+    if (start_ticks - prog_start) / 1000 > 41.25:
+        textt06.textsetColor(cs0)
+    if (start_ticks - prog_start) / 1000 > 41.4:
+        textt06.textsetColor(cs1)
+    if (start_ticks - prog_start) / 1000 > 41.55:
+        textt06.textsetColor(cs2)
+    if (start_ticks - prog_start) / 1000 > 41.7:
+        textt06.textsetColor(cs3)
+    if (start_ticks - prog_start) / 1000 > 41.85:
+        textt06.textsetColor(WHITE)
+
+    if (start_ticks - prog_start) / 1000 > 45.1:
+        textt06.textsetColor(cs3)
+    if (start_ticks - prog_start) / 1000 > 45.25:
+        textt06.textsetColor(cs2)
+    if (start_ticks - prog_start) / 1000 > 45.4:
+        textt06.textsetColor(cs1)
+    if (start_ticks - prog_start) / 1000 > 45.55:
+        textt06.textsetColor(cs0)
+    if (start_ticks - prog_start) / 1000 > 45.7:
+        textt06.textsetColor(cs)
+    if (start_ticks - prog_start) / 1000 > 45.85:
+        textt06.textsetColor(BLACK)
+
+    if (start_ticks - prog_start) / 1000 <= 45.85 and (start_ticks - prog_start) / 1000 > 41.85:
+        screen.blit(text06.getText(), text06.gettextpos())
+        screen.blit(textt06.getText(), textt06.gettextpos())
+
+
+    text07 = text(100, 70, 'Images Source', 26, "Renogare", BLACK)
+    text07.textsetpos(WIDTH / 2 - text07.getText().get_width() / 2, HEIGHT / 2 - text07.getText().get_height())
+
+    if (start_ticks - prog_start) / 1000 > 49.1:
+        text07.textsetColor(cs)
+    if (start_ticks - prog_start) / 1000 > 49.25:
+        text07.textsetColor(cs0)
+    if (start_ticks - prog_start) / 1000 > 49.4:
+        text07.textsetColor(cs1)
+    if (start_ticks - prog_start) / 1000 > 49.55:
+        text07.textsetColor(cs2)
+    if (start_ticks - prog_start) / 1000 > 49.7:
+        text07.textsetColor(cs3)
+    if (start_ticks - prog_start) / 1000 > 49.85:
+        text07.textsetColor(WHITE)
+
+    if (start_ticks - prog_start) / 1000 > 53.1:
+        text07.textsetColor(cs3)
+    if (start_ticks - prog_start) / 1000 > 53.25:
+        text07.textsetColor(cs2)
+    if (start_ticks - prog_start) / 1000 > 53.4:
+        text07.textsetColor(cs1)
+    if (start_ticks - prog_start) / 1000 > 53.55:
+        text07.textsetColor(cs0)
+    if (start_ticks - prog_start) / 1000 > 53.7:
+        text07.textsetColor(cs)
+    if (start_ticks - prog_start) / 1000 > 53.85:
+        text07.textsetColor(BLACK)
+
+    textt07 = text(100, 70, 'GOOGLE', 50, "Renogare", BLACK)
+    textt07.textsetpos(WIDTH / 2 - textt07.getText().get_width()/2, text07.y + text07.getText().get_height() + 10)
+
+    if (start_ticks - prog_start) / 1000 > 49.1:
+        textt07.textsetColor(cs)
+    if (start_ticks - prog_start) / 1000 > 49.25:
+        textt07.textsetColor(cs0)
+    if (start_ticks - prog_start) / 1000 > 49.4:
+        textt07.textsetColor(cs1)
+    if (start_ticks - prog_start) / 1000 > 49.55:
+        textt07.textsetColor(cs2)
+    if (start_ticks - prog_start) / 1000 > 49.7:
+        textt07.textsetColor(cs3)
+    if (start_ticks - prog_start) / 1000 > 49.85:
+        textt07.textsetColor(WHITE)
+
+    if (start_ticks - prog_start) / 1000 > 53.1:
+        textt07.textsetColor(cs3)
+    if (start_ticks - prog_start) / 1000 > 53.25:
+        textt07.textsetColor(cs2)
+    if (start_ticks - prog_start) / 1000 > 53.4:
+        textt07.textsetColor(cs1)
+    if (start_ticks - prog_start) / 1000 > 53.55:
+        textt07.textsetColor(cs0)
+    if (start_ticks - prog_start) / 1000 > 53.7:
+        textt07.textsetColor(cs)
+    if (start_ticks - prog_start) / 1000 > 53.85:
+        textt07.textsetColor(BLACK)
+
+    if (start_ticks - prog_start) / 1000 <= 49.85 and (start_ticks - prog_start) / 1000 > 53.85:
+        screen.blit(text07.getText(), text07.gettextpos())
+        screen.blit(textt07.getText(), textt07.gettextpos())
+
+    text08 = text(100, 70, 'Start Screen Music', 26, "Renogare", BLACK)
+    text08.textsetpos(WIDTH / 2 - text08.getText().get_width() / 2, HEIGHT / 2 - text08.getText().get_height())
+
+    if (start_ticks - prog_start) / 1000 > 57.1:
+        text08.textsetColor(cs)
+    if (start_ticks - prog_start) / 1000 > 57.25:
+        text08.textsetColor(cs0)
+    if (start_ticks - prog_start) / 1000 >57.4:
+        text08.textsetColor(cs1)
+    if (start_ticks - prog_start) / 1000 > 57.55:
+        text08.textsetColor(cs2)
+    if (start_ticks - prog_start) / 1000 > 57.7:
+        text08.textsetColor(cs3)
+    if (start_ticks - prog_start) / 1000 > 57.85:
+        text08.textsetColor(WHITE)
+
+    if (start_ticks - prog_start) / 1000 > 61.1:
+        text08.textsetColor(cs3)
+    if (start_ticks - prog_start) / 1000 > 61.25:
+        text08.textsetColor(cs2)
+    if (start_ticks - prog_start) / 1000 > 61.4:
+        text08.textsetColor(cs1)
+    if (start_ticks - prog_start) / 1000 > 61.55:
+        text08.textsetColor(cs0)
+    if (start_ticks - prog_start) / 1000 > 61.7:
+        text08.textsetColor(cs)
+    if (start_ticks - prog_start) / 1000 > 61.85:
+        text08.textsetColor(BLACK)
+
+    textt08 = text(100, 70, 'The Long Dark Theme', 50, "Renogare", BLACK)
+    textt08.textsetpos(WIDTH / 2 - textt08.getText().get_width()/2, text08.y + text08.getText().get_height() + 10)
+
+    if (start_ticks - prog_start) / 1000 > 57.1:
+        textt08.textsetColor(cs)
+    if (start_ticks - prog_start) / 1000 > 57.25:
+        textt08.textsetColor(cs0)
+    if (start_ticks - prog_start) / 1000 > 57.4:
+        textt08.textsetColor(cs1)
+    if (start_ticks - prog_start) / 1000 > 57.55:
+        textt08.textsetColor(cs2)
+    if (start_ticks - prog_start) / 1000 > 57.7:
+        textt08.textsetColor(cs3)
+    if (start_ticks - prog_start) / 1000 > 57.85:
+        textt08.textsetColor(WHITE)
+
+    if (start_ticks - prog_start) / 1000 > 61.1:
+        textt08.textsetColor(cs3)
+    if (start_ticks - prog_start) / 1000 > 61.25:
+        textt08.textsetColor(cs2)
+    if (start_ticks - prog_start) / 1000 > 61.4:
+        textt08.textsetColor(cs1)
+    if (start_ticks - prog_start) / 1000 > 61.55:
+        textt08.textsetColor(cs0)
+    if (start_ticks - prog_start) / 1000 > 61.7:
+        textt08.textsetColor(cs)
+    if (start_ticks - prog_start) / 1000 > 61.85:
+        textt08.textsetColor(BLACK)
+
+    if (start_ticks - prog_start) / 1000 <= 61.85 and (start_ticks - prog_start) / 1000 > 57.85:
+        screen.blit(text08.getText(), text08.gettextpos())
+        screen.blit(textt08.getText(), textt07.gettextpos())
+
+
+    text09 = text(100, 70, 'Ambient Music', 26, "Renogare", BLACK)
+    text09.textsetpos(WIDTH / 2 - text09.getText().get_width() / 2, HEIGHT / 2 - text09.getText().get_height())
+
+    if (start_ticks - prog_start) / 1000 > 65.1:
+        text09.textsetColor(cs)
+    if (start_ticks - prog_start) / 1000 > 65.25:
+        text09.textsetColor(cs0)
+    if (start_ticks - prog_start) / 1000 > 65.4:
+        text09.textsetColor(cs1)
+    if (start_ticks - prog_start) / 1000 > 65.55:
+        text09.textsetColor(cs2)
+    if (start_ticks - prog_start) / 1000 > 65.7:
+        text09.textsetColor(cs3)
+    if (start_ticks - prog_start) / 1000 > 65.85:
+        text09.textsetColor(WHITE)
+
+    if (start_ticks - prog_start) / 1000 > 69.1:
+        text09.textsetColor(cs3)
+    if (start_ticks - prog_start) / 1000 > 69.25:
+        text09.textsetColor(cs2)
+    if (start_ticks - prog_start) / 1000 > 69.4:
+        text09.textsetColor(cs1)
+    if (start_ticks - prog_start) / 1000 > 69.55:
+        text09.textsetColor(cs0)
+    if (start_ticks - prog_start) / 1000 > 69.7:
+        text09.textsetColor(cs)
+    if (start_ticks - prog_start) / 1000 > 69.85:
+        text09.textsetColor(BLACK)
+
+    textt09 = text(100, 70, 'Night Forest Sound', 50, "Renogare", BLACK)
+    textt09.textsetpos(WIDTH / 2 - textt09.getText().get_width()/2, text09.y + text09.getText().get_height() + 10)
+
+    if (start_ticks - prog_start) / 1000 > 65.1:
+        textt09.textsetColor(cs)
+    if (start_ticks - prog_start) / 1000 > 65.25:
+        textt09.textsetColor(cs0)
+    if (start_ticks - prog_start) / 1000 > 65.4:
+        textt09.textsetColor(cs1)
+    if (start_ticks - prog_start) / 1000 > 65.55:
+        textt09.textsetColor(cs2)
+    if (start_ticks - prog_start) / 1000 > 65.7:
+        textt09.textsetColor(cs3)
+    if (start_ticks - prog_start) / 1000 > 65.85:
+        textt09.textsetColor(WHITE)
+
+    if (start_ticks - prog_start) / 1000 > 69.1:
+        textt09.textsetColor(cs3)
+    if (start_ticks - prog_start) / 1000 > 69.25:
+        textt09.textsetColor(cs2)
+    if (start_ticks - prog_start) / 1000 > 69.4:
+        textt09.textsetColor(cs1)
+    if (start_ticks - prog_start) / 1000 > 69.55:
+        textt09.textsetColor(cs0)
+    if (start_ticks - prog_start) / 1000 > 69.7:
+        textt09.textsetColor(cs)
+    if (start_ticks - prog_start) / 1000 > 69.85:
+        textt09.textsetColor(BLACK)
+
+    if (start_ticks - prog_start) / 1000 <= 65.85 and (start_ticks - prog_start) / 1000 > 69.85:
+        screen.blit(text09.getText(), text09.gettextpos())
+        screen.blit(textt09.getText(), textt09.gettextpos())
+
+    text10 = text(100, 70, 'Movement Sounds', 26, "Renogare", BLACK)
+    text10.textsetpos(WIDTH / 2 - text10.getText().get_width() / 2, HEIGHT / 2 - text10.getText().get_height())
+
+    if (start_ticks - prog_start) / 1000 > 73.1:
+        text10.textsetColor(cs)
+    if (start_ticks - prog_start) / 1000 > 73.25:
+        text10.textsetColor(cs0)
+    if (start_ticks - prog_start) / 1000 > 73.4:
+        text10.textsetColor(cs1)
+    if (start_ticks - prog_start) / 1000 > 73.55:
+        text10.textsetColor(cs2)
+    if (start_ticks - prog_start) / 1000 > 73.7:
+        text10.textsetColor(cs3)
+    if (start_ticks - prog_start) / 1000 > 73.85:
+        text10.textsetColor(WHITE)
+
+    if (start_ticks - prog_start) / 1000 > 77.1:
+        text10.textsetColor(cs3)
+    if (start_ticks - prog_start) / 1000 > 77.25:
+        text10.textsetColor(cs2)
+    if (start_ticks - prog_start) / 1000 > 77.4:
+        text10.textsetColor(cs1)
+    if (start_ticks - prog_start) / 1000 > 77.55:
+        text10.textsetColor(cs0)
+    if (start_ticks - prog_start) / 1000 > 77.7:
+        text10.textsetColor(cs)
+    if (start_ticks - prog_start) / 1000 > 77.85:
+        text10.textsetColor(BLACK)
+
+    textt10 = text(100, 70, 'https://www.youtube.com', 50, "Renogare", BLACK)
+    textt10.textsetpos(WIDTH / 2 - textt10.getText().get_width()/2, text10.y + text10.getText().get_height() + 10)
+
+    if (start_ticks - prog_start) / 1000 > 73.1:
+        textt10.textsetColor(cs)
+    if (start_ticks - prog_start) / 1000 > 73.25:
+        textt10.textsetColor(cs0)
+    if (start_ticks - prog_start) / 1000 > 73.4:
+        textt10.textsetColor(cs1)
+    if (start_ticks - prog_start) / 1000 > 73.55:
+        textt10.textsetColor(cs2)
+    if (start_ticks - prog_start) / 1000 > 73.7:
+        textt10.textsetColor(cs3)
+    if (start_ticks - prog_start) / 1000 > 73.85:
+        textt10.textsetColor(WHITE)
+
+    if (start_ticks - prog_start) / 1000 > 77.1:
+        textt10.textsetColor(cs3)
+    if (start_ticks - prog_start) / 1000 > 77.25:
+        textt10.textsetColor(cs2)
+    if (start_ticks - prog_start) / 1000 > 77.4:
+        textt10.textsetColor(cs1)
+    if (start_ticks - prog_start) / 1000 > 77.55:
+        textt10.textsetColor(cs0)
+    if (start_ticks - prog_start) / 1000 > 77.7:
+        textt10.textsetColor(cs)
+    if (start_ticks - prog_start) / 1000 > 77.85:
+        textt10.textsetColor(BLACK)
+
+    if (start_ticks - prog_start) / 1000 <= 73.85 and (start_ticks - prog_start) / 1000 > 77.85:
+        screen.blit(text10.getText(), text10.gettextpos())
+        screen.blit(textt10.getText(), textt10.gettextpos())
+
+    text11 = text(100, 70, 'Pause Screen Music', 26, "Renogare", BLACK)
+    text11.textsetpos(WIDTH / 2 - text11.getText().get_width() / 2, HEIGHT / 2 - text11.getText().get_height())
+
+    if (start_ticks - prog_start) / 1000 > 81.1:
+        text11.textsetColor(cs)
+    if (start_ticks - prog_start) / 1000 > 81.25:
+        text11.textsetColor(cs0)
+    if (start_ticks - prog_start) / 1000 > 81.4:
+        text11.textsetColor(cs1)
+    if (start_ticks - prog_start) / 1000 > 81.55:
+        text11.textsetColor(cs2)
+    if (start_ticks - prog_start) / 1000 > 81.7:
+        text11.textsetColor(cs3)
+    if (start_ticks - prog_start) / 1000 > 81.85:
+        text11.textsetColor(WHITE)
+
+    if (start_ticks - prog_start) / 1000 > 85.1:
+        text11.textsetColor(cs3)
+    if (start_ticks - prog_start) / 1000 > 85.25:
+        text11.textsetColor(cs2)
+    if (start_ticks - prog_start) / 1000 > 85.4:
+        text11.textsetColor(cs1)
+    if (start_ticks - prog_start) / 1000 > 85.55:
+        text11.textsetColor(cs0)
+    if (start_ticks - prog_start) / 1000 > 85.7:
+        text11.textsetColor(cs)
+    if (start_ticks - prog_start) / 1000 > 85.85:
+        text11.textsetColor(BLACK)
+
+    textt11 = text(100, 70, 'GRIS OST - Mae', 50, "Renogare", BLACK)
+    textt11.textsetpos(WIDTH / 2 - textt11.getText().get_width()/2, text11.y + text11.getText().get_height() + 10)
+
+    if (start_ticks - prog_start) / 1000 > 81.1:
+        textt11.textsetColor(cs)
+    if (start_ticks - prog_start) / 1000 > 81.25:
+        textt11.textsetColor(cs0)
+    if (start_ticks - prog_start) / 1000 > 81.4:
+        textt11.textsetColor(cs1)
+    if (start_ticks - prog_start) / 1000 > 81.55:
+        textt11.textsetColor(cs2)
+    if (start_ticks - prog_start) / 1000 > 81.7:
+        textt11.textsetColor(cs3)
+    if (start_ticks - prog_start) / 1000 > 81.85:
+        textt11.textsetColor(WHITE)
+
+    if (start_ticks - prog_start) / 1000 > 85.1:
+        textt11.textsetColor(cs3)
+    if (start_ticks - prog_start) / 1000 > 85.25:
+        textt11.textsetColor(cs2)
+    if (start_ticks - prog_start) / 1000 > 85.4:
+        textt11.textsetColor(cs1)
+    if (start_ticks - prog_start) / 1000 > 85.55:
+        textt11.textsetColor(cs0)
+    if (start_ticks - prog_start) / 1000 > 85.7:
+        textt11.textsetColor(cs)
+    if (start_ticks - prog_start) / 1000 > 85.85:
+        textt11.textsetColor(BLACK)
+
+    if (start_ticks - prog_start) / 1000 <= 85.85 and (start_ticks - prog_start) / 1000 > 81.85:
+        screen.blit(text11.getText(), text11.gettextpos())
+        screen.blit(textt11.getText(), textt11.gettextpos())
+
+    text12 = text(100, 70, 'Credit Scene Music', 26, "Renogare", BLACK)
+    text12.textsetpos(WIDTH / 2 - text12.getText().get_width() / 2, HEIGHT / 2 - text12.getText().get_height())
+
+    if (start_ticks - prog_start) / 1000 > 89.1:
+        text12.textsetColor(cs)
+    if (start_ticks - prog_start) / 1000 > 89.25:
+        text12.textsetColor(cs0)
+    if (start_ticks - prog_start) / 1000 > 89.4:
+        text12.textsetColor(cs1)
+    if (start_ticks - prog_start) / 1000 > 89.55:
+        text12.textsetColor(cs2)
+    if (start_ticks - prog_start) / 1000 > 89.7:
+        text12.textsetColor(cs3)
+    if (start_ticks - prog_start) / 1000 > 89.85:
+        text12.textsetColor(WHITE)
+
+    if (start_ticks - prog_start) / 1000 > 93.1:
+        text12.textsetColor(cs3)
+    if (start_ticks - prog_start) / 1000 > 93.25:
+        text12.textsetColor(cs2)
+    if (start_ticks - prog_start) / 1000 > 93.4:
+        text12.textsetColor(cs1)
+    if (start_ticks - prog_start) / 1000 > 93.55:
+        text12.textsetColor(cs0)
+    if (start_ticks - prog_start) / 1000 > 93.7:
+        text12.textsetColor(cs)
+    if (start_ticks - prog_start) / 1000 > 93.85:
+        text12.textsetColor(BLACK)
+
+    textt12 = text(100, 70, 'GRIS OST - In Your Hands', 50, "Renogare", BLACK)
+    textt12.textsetpos(WIDTH / 2 - textt12.getText().get_width()/2, text12.y + text12.getText().get_height() + 10)
+
+    if (start_ticks - prog_start) / 1000 > 89.1:
+        textt12.textsetColor(cs)
+    if (start_ticks - prog_start) / 1000 > 89.25:
+        textt12.textsetColor(cs0)
+    if (start_ticks - prog_start) / 1000 > 89.4:
+        textt12.textsetColor(cs1)
+    if (start_ticks - prog_start) / 1000 > 89.55:
+        textt12.textsetColor(cs2)
+    if (start_ticks - prog_start) / 1000 > 89.7:
+        textt12.textsetColor(cs3)
+    if (start_ticks - prog_start) / 1000 > 89.85:
+        textt12.textsetColor(WHITE)
+
+    if (start_ticks - prog_start) / 1000 > 93.1:
+        textt12.textsetColor(cs3)
+    if (start_ticks - prog_start) / 1000 > 93.25:
+        textt12.textsetColor(cs2)
+    if (start_ticks - prog_start) / 1000 > 93.4:
+        textt12.textsetColor(cs1)
+    if (start_ticks - prog_start) / 1000 > 93.55:
+        textt12.textsetColor(cs0)
+    if (start_ticks - prog_start) / 1000 > 93.7:
+        textt12.textsetColor(cs)
+    if (start_ticks - prog_start) / 1000 > 93.85:
+        textt12.textsetColor(BLACK)
+
+    if (start_ticks - prog_start) / 1000 <= 93.85 and (start_ticks - prog_start) / 1000 > 89.85:
+        screen.blit(text12.getText(), text12.gettextpos())
+        screen.blit(textt12.getText(), textt12.gettextpos())
+
+    text13 = text(100, 70, 'Outro Sound', 26, "Renogare", BLACK)
+    text13.textsetpos(WIDTH / 2 - text13.getText().get_width() / 2, HEIGHT / 2 - text13.getText().get_height())
+
+    if (start_ticks - prog_start) / 1000 > 97.1:
+        text13.textsetColor(cs)
+    if (start_ticks - prog_start) / 1000 > 97.25:
+        text13.textsetColor(cs0)
+    if (start_ticks - prog_start) / 1000 > 97.4:
+        text13.textsetColor(cs1)
+    if (start_ticks - prog_start) / 1000 > 97.55:
+        text13.textsetColor(cs2)
+    if (start_ticks - prog_start) / 1000 > 97.7:
+        text13.textsetColor(cs3)
+    if (start_ticks - prog_start) / 1000 > 97.85:
+        text13.textsetColor(WHITE)
+
+    if (start_ticks - prog_start) / 1000 > 101.1:
+        text13.textsetColor(cs3)
+    if (start_ticks - prog_start) / 1000 > 101.25:
+        text13.textsetColor(cs2)
+    if (start_ticks - prog_start) / 1000 > 101.4:
+        text13.textsetColor(cs1)
+    if (start_ticks - prog_start) / 1000 > 101.55:
+        text13.textsetColor(cs0)
+    if (start_ticks - prog_start) / 1000 > 101.7:
+        text13.textsetColor(cs)
+    if (start_ticks - prog_start) / 1000 > 101.85:
+        text13.textsetColor(BLACK)
+
+    textt13 = text(100, 70, 'https://www.youtube.com', 50, "Renogare", BLACK)
+    textt13.textsetpos(WIDTH / 2 - textt13.getText().get_width()/2, text13.y + text13.getText().get_height() + 10)
+
+    if (start_ticks - prog_start) / 1000 > 97.1:
+        textt13.textsetColor(cs)
+    if (start_ticks - prog_start) / 1000 > 97.25:
+        textt13.textsetColor(cs0)
+    if (start_ticks - prog_start) / 1000 > 97.4:
+        textt13.textsetColor(cs1)
+    if (start_ticks - prog_start) / 1000 > 97.55:
+        textt13.textsetColor(cs2)
+    if (start_ticks - prog_start) / 1000 > 97.7:
+        textt13.textsetColor(cs3)
+    if (start_ticks - prog_start) / 1000 > 97.85:
+        textt13.textsetColor(WHITE)
+
+    if (start_ticks - prog_start) / 1000 > 101.1:
+        textt13.textsetColor(cs3)
+    if (start_ticks - prog_start) / 1000 > 101.25:
+        textt13.textsetColor(cs2)
+    if (start_ticks - prog_start) / 1000 > 101.4:
+        textt13.textsetColor(cs1)
+    if (start_ticks - prog_start) / 1000 > 101.55:
+        textt13.textsetColor(cs0)
+    if (start_ticks - prog_start) / 1000 > 101.7:
+        textt13.textsetColor(cs)
+    if (start_ticks - prog_start) / 1000 > 101.85:
+        textt13.textsetColor(BLACK)
+
+    if (start_ticks - prog_start) / 1000 <= 101.85 and (start_ticks - prog_start) / 1000 > 97.85:
+        screen.blit(text13.getText(), text13.gettextpos())
+        screen.blit(textt13.getText(), textt13.gettextpos())
+
+    text14 = text(100, 70, 'with thanks to', 26, "Renogare", BLACK)
+    text14.textsetpos(WIDTH / 2 - text14.getText().get_width() / 2, HEIGHT / 2 - text14.getText().get_height())
+
+    if (start_ticks - prog_start) / 1000 > 105.1:
+        text14.textsetColor(cs)
+    if (start_ticks - prog_start) / 1000 > 105.25:
+        text14.textsetColor(cs0)
+    if (start_ticks - prog_start) / 1000 > 105.4:
+        text14.textsetColor(cs1)
+    if (start_ticks - prog_start) / 1000 > 105.55:
+        text14.textsetColor(cs2)
+    if (start_ticks - prog_start) / 1000 > 105.7:
+        text14.textsetColor(cs3)
+    if (start_ticks - prog_start) / 1000 > 105.85:
+        text14.textsetColor(WHITE)
+
+    if (start_ticks - prog_start) / 1000 > 109.1:
+        text14.textsetColor(cs3)
+    if (start_ticks - prog_start) / 1000 > 109.25:
+        text14.textsetColor(cs2)
+    if (start_ticks - prog_start) / 1000 > 109.4:
+        text14.textsetColor(cs1)
+    if (start_ticks - prog_start) / 1000 > 109.55:
+        text14.textsetColor(cs0)
+    if (start_ticks - prog_start) / 1000 > 109.7:
+        text14.textsetColor(cs)
+    if (start_ticks - prog_start) / 1000 > 109.85:
+        text14.textsetColor(BLACK)
+
+    textt14 = text(100, 70, 'our teacher Michael Zhang', 50, "Renogare", BLACK)
+    textt14.textsetpos(WIDTH / 2 - textt14.getText().get_width()/2, text14.y + text14.getText().get_height() + 10)
+
+    if (start_ticks - prog_start) / 1000 > 105.1:
+        textt14.textsetColor(cs)
+    if (start_ticks - prog_start) / 1000 > 105.25:
+        textt14.textsetColor(cs0)
+    if (start_ticks - prog_start) / 1000 > 105.4:
+        textt14.textsetColor(cs1)
+    if (start_ticks - prog_start) / 1000 > 105.55:
+        textt14.textsetColor(cs2)
+    if (start_ticks - prog_start) / 1000 > 105.7:
+        textt14.textsetColor(cs3)
+    if (start_ticks - prog_start) / 1000 > 105.85:
+        textt14.textsetColor(WHITE)
+
+    if (start_ticks - prog_start) / 1000 > 109.1:
+        textt14.textsetColor(cs3)
+    if (start_ticks - prog_start) / 1000 > 109.25:
+        textt14.textsetColor(cs2)
+    if (start_ticks - prog_start) / 1000 > 109.4:
+        textt14.textsetColor(cs1)
+    if (start_ticks - prog_start) / 1000 > 109.55:
+        textt14.textsetColor(cs0)
+    if (start_ticks - prog_start) / 1000 > 109.7:
+        textt14.textsetColor(cs)
+    if (start_ticks - prog_start) / 1000 > 109.85:
+        textt14.textsetColor(BLACK)
+
+    if (start_ticks - prog_start) / 1000 <= 109.85 and (start_ticks - prog_start) / 1000 > 105.85:
+        screen.blit(text14.getText(), text14.gettextpos())
+        screen.blit(textt14.getText(), textt14.gettextpos())
+
+
+    text15 = text(100, 70, 'Programming IDE', 26, "Renogare", BLACK)
+    text15.textsetpos(WIDTH / 2 - text15.getText().get_width() / 2, HEIGHT / 2 - text15.getText().get_height())
+
+    if (start_ticks - prog_start) / 1000 > 113.1:
+        text15.textsetColor(cs)
+    if (start_ticks - prog_start) / 1000 > 113.25:
+        text15.textsetColor(cs0)
+    if (start_ticks - prog_start) / 1000 > 113.4:
+        text15.textsetColor(cs1)
+    if (start_ticks - prog_start) / 1000 > 113.55:
+        text15.textsetColor(cs2)
+    if (start_ticks - prog_start) / 1000 > 113.7:
+        text15.textsetColor(cs3)
+    if (start_ticks - prog_start) / 1000 > 113.85:
+        text15.textsetColor(WHITE)
+
+    if (start_ticks - prog_start) / 1000 > 117.1:
+        text15.textsetColor(cs3)
+    if (start_ticks - prog_start) / 1000 > 117.25:
+        text15.textsetColor(cs2)
+    if (start_ticks - prog_start) / 1000 > 117.4:
+        text15.textsetColor(cs1)
+    if (start_ticks - prog_start) / 1000 > 117.55:
+        text15.textsetColor(cs0)
+    if (start_ticks - prog_start) / 1000 > 117.7:
+        text15.textsetColor(cs)
+    if (start_ticks - prog_start) / 1000 > 117.85:
+        text15.textsetColor(BLACK)
+
+    textt15 = text(100, 70, 'PYCHARM COMMUNITY', 50, "Renogare", BLACK)
+    textt15.textsetpos(WIDTH / 2 - textt15.getText().get_width()/2, text15.y + text15.getText().get_height() + 10)
+
+    if (start_ticks - prog_start) / 1000 > 113.1:
+        textt15.textsetColor(cs)
+    if (start_ticks - prog_start) / 1000 > 113.25:
+        textt15.textsetColor(cs0)
+    if (start_ticks - prog_start) / 1000 > 113.4:
+        textt15.textsetColor(cs1)
+    if (start_ticks - prog_start) / 1000 > 113.55:
+        textt15.textsetColor(cs2)
+    if (start_ticks - prog_start) / 1000 > 113.7:
+        textt15.textsetColor(cs3)
+    if (start_ticks - prog_start) / 1000 > 113.85:
+        textt15.textsetColor(WHITE)
+
+    if (start_ticks - prog_start) / 1000 > 117.1:
+        textt15.textsetColor(cs3)
+    if (start_ticks - prog_start) / 1000 > 117.25:
+        textt15.textsetColor(cs2)
+    if (start_ticks - prog_start) / 1000 > 117.4:
+        textt15.textsetColor(cs1)
+    if (start_ticks - prog_start) / 1000 > 117.55:
+        textt15.textsetColor(cs0)
+    if (start_ticks - prog_start) / 1000 > 117.7:
+        textt15.textsetColor(cs)
+    if (start_ticks - prog_start) / 1000 > 117.85:
+        textt15.textsetColor(BLACK)
+
+    if (start_ticks - prog_start) / 1000 <= 117.85 and (start_ticks - prog_start) / 1000 > 113.85:
+        screen.blit(text15.getText(), text15.gettextpos())
+        screen.blit(textt15.getText(), textt15.gettextpos())
+
+    text16 = text(100, 70, 'Pixel Drawing Site', 26, "Renogare", BLACK)
+    text16.textsetpos(WIDTH / 2 - text16.getText().get_width() / 2, HEIGHT / 2 - text16.getText().get_height())
+
+    if (start_ticks - prog_start) / 1000 > 121.1:
+        text16.textsetColor(cs)
+    if (start_ticks - prog_start) / 1000 > 121.25:
+        text16.textsetColor(cs0)
+    if (start_ticks - prog_start) / 1000 > 121.4:
+        text16.textsetColor(cs1)
+    if (start_ticks - prog_start) / 1000 > 121.55:
+        text16.textsetColor(cs2)
+    if (start_ticks - prog_start) / 1000 > 121.7:
+        text16.textsetColor(cs3)
+    if (start_ticks - prog_start) / 1000 > 121.85:
+        text16.textsetColor(WHITE)
+
+    if (start_ticks - prog_start) / 1000 > 125.1:
+        text16.textsetColor(cs3)
+    if (start_ticks - prog_start) / 1000 > 125.25:
+        text16.textsetColor(cs2)
+    if (start_ticks - prog_start) / 1000 > 125.4:
+        text16.textsetColor(cs1)
+    if (start_ticks - prog_start) / 1000 > 125.55:
+        text16.textsetColor(cs0)
+    if (start_ticks - prog_start) / 1000 > 125.7:
+        text16.textsetColor(cs)
+    if (start_ticks - prog_start) / 1000 > 125.85:
+        text16.textsetColor(BLACK)
+
+    textt16 = text(100, 70, 'https://www.piskelapp.com', 50, "Renogare", BLACK)
+    textt16.textsetpos(WIDTH / 2 - textt16.getText().get_width()/2, text16.y + text16.getText().get_height() + 10)
+
+    if (start_ticks - prog_start) / 1000 > 121.1:
+        textt16.textsetColor(cs)
+    if (start_ticks - prog_start) / 1000 > 121.25:
+        textt16.textsetColor(cs0)
+    if (start_ticks - prog_start) / 1000 > 121.4:
+        textt16.textsetColor(cs1)
+    if (start_ticks - prog_start) / 1000 > 121.55:
+        textt16.textsetColor(cs2)
+    if (start_ticks - prog_start) / 1000 > 121.7:
+        textt16.textsetColor(cs3)
+    if (start_ticks - prog_start) / 1000 > 121.85:
+        textt16.textsetColor(WHITE)
+
+    if (start_ticks - prog_start) / 1000 > 125.1:
+        textt16.textsetColor(cs3)
+    if (start_ticks - prog_start) / 1000 > 125.25:
+        textt16.textsetColor(cs2)
+    if (start_ticks - prog_start) / 1000 > 125.4:
+        textt16.textsetColor(cs1)
+    if (start_ticks - prog_start) / 1000 > 125.55:
+        textt16.textsetColor(cs0)
+    if (start_ticks - prog_start) / 1000 > 125.7:
+        textt16.textsetColor(cs)
+    if (start_ticks - prog_start) / 1000 > 125.85:
+        textt16.textsetColor(BLACK)
+
+    if (start_ticks - prog_start) / 1000 <= 125.85 and (start_ticks - prog_start) / 1000 > 121.85:
+        screen.blit(text16.getText(), text16.gettextpos())
+        screen.blit(textt16.getText(), textt16.gettextpos())
+
+
+    text17 = text(100, 70, 'Graphics Editor', 26, "Renogare", BLACK)
+    text17.textsetpos(WIDTH / 2 - text17.getText().get_width() / 2, HEIGHT / 2 - text17.getText().get_height())
+
+    if (start_ticks - prog_start) / 1000 > 129.1:
+        text17.textsetColor(cs)
+    if (start_ticks - prog_start) / 1000 > 129.25:
+        text17.textsetColor(cs0)
+    if (start_ticks - prog_start) / 1000 > 129.4:
+        text17.textsetColor(cs1)
+    if (start_ticks - prog_start) / 1000 > 129.55:
+        text17.textsetColor(cs2)
+    if (start_ticks - prog_start) / 1000 > 129.7:
+        text17.textsetColor(cs3)
+    if (start_ticks - prog_start) / 1000 > 129.85:
+        text17.textsetColor(WHITE)
+
+    if (start_ticks - prog_start) / 1000 > 133.1:
+        text17.textsetColor(cs3)
+    if (start_ticks - prog_start) / 1000 > 133.25:
+        text17.textsetColor(cs2)
+    if (start_ticks - prog_start) / 1000 > 133.4:
+        text17.textsetColor(cs1)
+    if (start_ticks - prog_start) / 1000 > 133.55:
+        text17.textsetColor(cs0)
+    if (start_ticks - prog_start) / 1000 > 133.7:
+        text17.textsetColor(cs)
+    if (start_ticks - prog_start) / 1000 > 133.85:
+        text17.textsetColor(BLACK)
+
+    textt17 = text(100, 70, 'Adobe Photoshop', 50, "Renogare", BLACK)
+    textt17.textsetpos(WIDTH / 2 - textt17.getText().get_width()/2, text17.y + text17.getText().get_height() + 10)
+
+    if (start_ticks - prog_start) / 1000 > 129.1:
+        textt17.textsetColor(cs)
+    if (start_ticks - prog_start) / 1000 > 129.25:
+        textt17.textsetColor(cs0)
+    if (start_ticks - prog_start) / 1000 > 129.4:
+        textt17.textsetColor(cs1)
+    if (start_ticks - prog_start) / 1000 > 129.55:
+        textt17.textsetColor(cs2)
+    if (start_ticks - prog_start) / 1000 > 129.7:
+        textt17.textsetColor(cs3)
+    if (start_ticks - prog_start) / 1000 > 129.85:
+        textt17.textsetColor(WHITE)
+
+    if (start_ticks - prog_start) / 1000 > 133.1:
+        textt17.textsetColor(cs3)
+    if (start_ticks - prog_start) / 1000 > 133.25:
+        textt17.textsetColor(cs2)
+    if (start_ticks - prog_start) / 1000 > 133.4:
+        textt17.textsetColor(cs1)
+    if (start_ticks - prog_start) / 1000 > 133.55:
+        textt17.textsetColor(cs0)
+    if (start_ticks - prog_start) / 1000 > 133.7:
+        textt17.textsetColor(cs)
+    if (start_ticks - prog_start) / 1000 > 133.85:
+        textt17.textsetColor(BLACK)
+
+    if (start_ticks - prog_start) / 1000 <= 133.85 and (start_ticks - prog_start) / 1000 > 129.85:
+        screen.blit(text17.getText(), text17.gettextpos())
+        screen.blit(textt17.getText(), textt17.gettextpos())
+
+    text18 = text(100, 70, 'THANKS FOR PLAYING!', 50, "Renogare", BLACK)
+    text18.textsetpos(WIDTH / 2 - text18.getText().get_width() / 2, HEIGHT/2 - text18.getText().get_height()/2)
+
+    if (start_ticks - prog_start) / 1000 > 137.1:
+        text18.textsetColor(cs)
+    if (start_ticks - prog_start) / 1000 > 137.25:
+        text18.textsetColor(cs0)
+    if (start_ticks - prog_start) / 1000 > 137.4:
+        text18.textsetColor(cs1)
+    if (start_ticks - prog_start) / 1000 > 137.55:
+        text18.textsetColor(cs2)
+    if (start_ticks - prog_start) / 1000 > 137.7:
+        text18.textsetColor(cs3)
+    if (start_ticks - prog_start) / 1000 > 137.85:
+        text18.textsetColor(WHITE)
+
+    if (start_ticks - prog_start) / 1000 > 141.1:
+        text18.textsetColor(cs3)
+    if (start_ticks - prog_start) / 1000 > 141.25:
+        text18.textsetColor(cs2)
+    if (start_ticks - prog_start) / 1000 > 141.4:
+        text18.textsetColor(cs1)
+    if (start_ticks - prog_start) / 1000 > 141.55:
+        text18.textsetColor(cs0)
+    if (start_ticks - prog_start) / 1000 > 141.7:
+        text18.textsetColor(cs)
+    if (start_ticks - prog_start) / 1000 > 141.85:
+        text18.textsetColor(BLACK)
+
+    if (start_ticks - prog_start) / 1000 <= 141.85 and (start_ticks - prog_start) / 1000 > 137.85:
+        screen.blit(text18.getText(), text18.gettextpos())
+
+    text19 = text(100, 70, 'Click anywhere to continue', 30, "Renogare", BLACK)
+    text19.textsetColor(WHITE)
+    text19.textsetpos(WIDTH - text19.getText().get_width() - 20, HEIGHT - text19.getText().get_height() - 20)
+
+    if (start_ticks - prog_start) / 1000 > 5.85:
+        screen.blit(text19.getText(), text19.gettextpos())
 
 
 # Tutorial Sections
 def tutorialmove():
+    global instruction_screen
+
     tit01 = text(100, 70, "MOVEMENT TUTORIAL", 50, "Renogare", WHITE)
     x = WIDTH / 2 - tit01.getText().get_width() / 2
     y = HEIGHT / 2 - tit01.getText().get_height() / 2 - 200
@@ -2793,7 +4024,7 @@ def tutorialmove():
     y = HEIGHT / 2 - exit01.getText().get_height() / 2 + 200
     exit01.textsetpos(x, y)
 
-    screen.fill(BLACK)
+    screen.blit(instruction_screen.getSurface(), instruction_screen.getPos())
     screen.blit(tit01.getText(), tit01.gettextpos())
     screen.blit(tut01.getText(), tut01.gettextpos())
     screen.blit(tut02.getText(), tut02.gettextpos())
@@ -2803,6 +4034,7 @@ def tutorialmove():
     screen.blit(exit01.getText(), exit01.gettextpos())
 
 def tutorialatt():
+    global instruction_screen
 
     tit2 = text(100, 70, "ATTACK TUTORIAL", 50, "Renogare", WHITE)
     x = WIDTH / 2 - tit2.getText().get_width() / 2
@@ -2824,7 +4056,7 @@ def tutorialatt():
     y = HEIGHT / 2 - tut08.getText().get_height() / 2
     tut08.textsetpos(x, y)
 
-    tut09 = text(100, 70, "The third click aka combo can lob [something] ", 35, "Renogare", WHITE)
+    tut09 = text(100, 70, "The third click aka combo can throw a cat ", 35, "Renogare", WHITE)
     x = WIDTH / 2 - tut09.getText().get_width() / 2
     y = HEIGHT / 2 - tut09.getText().get_height() / 2 + 50
     tut09.textsetpos(x, y)
@@ -2834,7 +4066,7 @@ def tutorialatt():
     y = HEIGHT / 2 - exit02.getText().get_height() / 2 + 200
     exit02.textsetpos(x, y)
 
-    screen.fill(BLACK)
+    screen.blit(instruction_screen.getSurface(), instruction_screen.getPos())
     screen.blit(tit2.getText(), tit2.gettextpos())
     screen.blit(tut06.getText(), tut06.gettextpos())
     screen.blit(tut07.getText(), tut07.gettextpos())
@@ -2843,6 +4075,7 @@ def tutorialatt():
     screen.blit(exit02.getText(), exit02.gettextpos())
 
 def tutorialspeatt():
+    global instruction_screen
 
     tit3 = text(100, 70, "SPECIAL ATTACK TUTORIAL", 50, "Renogare", WHITE)
     x = WIDTH / 2 - tit3.getText().get_width() / 2
@@ -2854,7 +4087,7 @@ def tutorialspeatt():
     y = HEIGHT / 2 - tut10.getText().get_height() / 2 - 100
     tut10.textsetpos(x, y)
 
-    tut11 = text(100, 70, "It is considered as the ultimate ", 35, "Renogare", WHITE)
+    tut11 = text(100, 70, "It will stun the enemy", 35, "Renogare", WHITE)
     x = WIDTH / 2 - tut11.getText().get_width() / 2
     y = HEIGHT / 2 - tut11.getText().get_height() / 2 - 50
     tut11.textsetpos(x, y)
@@ -2864,7 +4097,7 @@ def tutorialspeatt():
     y = HEIGHT / 2 - tut12.getText().get_height() / 2
     tut12.textsetpos(x, y)
 
-    tut13 = text(100, 70, "The third click aka combo can lob [something] ", 35, "Renogare", WHITE)
+    tut13 = text(100, 70, "Press [ E ] to interact with the environment", 35, "Renogare", WHITE)
     x = WIDTH / 2 - tut13.getText().get_width() / 2
     y = HEIGHT / 2 - tut13.getText().get_height() / 2 + 50
     tut13.textsetpos(x, y)
@@ -2874,7 +4107,7 @@ def tutorialspeatt():
     y = HEIGHT / 2 - exit01.getText().get_height() / 2 + 200
     exit01.textsetpos(x, y)
 
-    screen.fill(BLACK)
+    screen.blit(instruction_screen.getSurface(), instruction_screen.getPos())
     screen.blit(tit3.getText(), tit3.gettextpos())
     screen.blit(tut10.getText(), tut10.gettextpos())
     screen.blit(tut11.getText(), tut11.gettextpos())
@@ -2891,24 +4124,53 @@ while running:
         if (event.type == pygame.QUIT): # If the red X was clicked
             running = False
 
-        if event.type == pygame.KEYDOWN and section_area == -1:
+        if event.type == pygame.KEYDOWN and section_area == -1 and cutscenelevel == 3:
             cutscenelevel = 1
+
+        if (event.type == pygame.MOUSEBUTTONDOWN and cutscenelevel == 4 and (start_ticks - prog_start/1000 > 5.85)):
+            cutscenelevel = 3
+            prog_start = -1
+            section_area = -1
+
+        if (event.type == pygame.MOUSEBUTTONDOWN and cutscenelevel == 1 and (start_ticks - prog_start / 1000 > 1.85)):
+            section_area = 0
+            cutscenelevel = 0
+            prog_start = -1
+            delay_mouse = 0
 
 
     pressedKey = pygame.key.get_pressed()
+    delay_mouse += 1
 
-    if (pygame.mixer.Channel(3).get_busy()):
-        print('Pn')
+    if (scenechange == 0):
+        for i in range(20):
+            pygame.mixer.Channel(i).stop()
 
-    # ----------------- Main gameplay -------------------- #
+
+    # ----------------- Main gameplay --------------------
     if pauselevel == 0 and section_area >= 0 and cutscenelevel == 0 and tutoriallevel == 0:
-        if (pygame.mixer.Channel(3).get_busy() == False):
-            pygame.mixer.Channel(3).play(pygame.mixer.Sound('media/ambient.wav'), 1)
-            pygame.mixer.Channel(3).set_volume(0.02)
+        #print(save_count)
+        if (section_area != 9 and section_area != 11 and section_area != 13):
+            in_cave = False
+        else:
+            in_cave = True
 
-        for i in range(10):
-            if (pygame.mixer.Channel(i).get_busy() == True and i != 3 and i != 1 and i != 2 and i != 5):
-                pygame.mixer.Channel(i).stop()
+
+        if (in_cave == False):
+            if (pygame.mixer.Channel(3).get_busy() == False):
+                pygame.mixer.Channel(3).play(pygame.mixer.Sound('media/ambient.wav'), 1)
+                pygame.mixer.Channel(3).set_volume(0.02)
+            pygame.mixer.Channel(11).stop()
+        else:
+            if (pygame.mixer.Channel(11).get_busy() == False):
+                pygame.mixer.Channel(11).play(pygame.mixer.Sound('media/cave1.wav'), 1)
+                pygame.mixer.Channel(11).set_volume(0.1)
+            pygame.mixer.Channel(3).stop()
+
+        for i in range(20):
+            if (pygame.mixer.Channel(i).get_busy() == True and i != 3 and i != 11 and i != 1 and i != 2 and i != 5 and i != 6 and i != 7 and i != 8 and i != 12 and i != 13 and i != 14 and i != 15):
+                    pygame.mixer.Channel(i).stop()
+
 
         if (section_area == 0):
             section1_init()
@@ -2974,13 +4236,13 @@ while running:
             pygame.mixer.Channel(4).play(pygame.mixer.Sound('media/pause.wav'), 1)
             pygame.mixer.Channel(4).set_volume(0.6)
 
-        for i in range(10):
+        for i in range(20):
             if (pygame.mixer.Channel(i).get_busy() == True and i != 4):
                 pygame.mixer.Channel(i).stop()
 
-
         screen.fill(BLACK)
         pause_screen()
+
     if pauselevel == 2:
         screen.fill(BLACK)
         keybinds_screen()
@@ -2996,40 +4258,32 @@ while running:
             prog_start = pygame.time.get_ticks()
         screen.fill(BLACK)
         cutscene01()
-        cutscene02()
-        cutscene03()
-        cutscene04()
-        cutscene05()
 
     # --------------------------- Outtro -------------------- #
     if cutscenelevel == 2:
+        for i in range(20):
+            if (pygame.mixer.Channel(i).get_busy() == True and i != 9):
+                pygame.mixer.Channel(i).stop()
+
+        if (pygame.mixer.Channel(9).get_busy() == False):
+            pygame.mixer.Channel(9).play(pygame.mixer.Sound('media/outro.wav'), 1)
+            #pygame.mixer.Channel(9).set_volume(0.7)
+
+        if (prog_start == -1):
+            prog_start = pygame.time.get_ticks()
+
         screen.fill(WHITE)
-        if start_ticks / 1000 > 0:
-            cutscene06()
-        if start_ticks / 1000 > 6.10:
-            cutscene07()
-        if start_ticks / 1000 > 12.10:
-            cutscene08()
-        if start_ticks / 1000 > 18.10:
-            cutscene09()
-        if start_ticks / 1000 > 24.10:
-            cutscene10()
-        if start_ticks / 1000 > 30.10:
-            cutscene11()
-        if start_ticks / 1000 > 36.10:
-            cutscene12()
-        if start_ticks / 1000 > 42.10:
-            cutscene13()
-        if start_ticks / 1000 > 48.10:
-            cutscene14()
-        if start_ticks / 1000 > 54.10:
-            cutscene15()
+        cutscene02()
         if start_ticks / 1000 > 61.10:
             screen.fill(BLACK)
 
 
-    # Start menu
+    # ----------------------------- Start menu ----------------- #
     if (cutscenelevel == 3):
+        for i in range(20):
+            if (pygame.mixer.Channel(i).get_busy() == True and i != 0):
+                pygame.mixer.Channel(i).stop()
+
         if (pygame.mixer.Channel(0).get_busy() == False):
             pygame.mixer.Channel(0).play(pygame.mixer.Sound('media/menu.wav'), 1)
 
@@ -3038,22 +4292,47 @@ while running:
         if (count > 355):
             count = 0
 
+    # ------------------------------ Credit Scene --------------------------- #
+    if (cutscenelevel == 4):
+        for i in range(20):
+            if (pygame.mixer.Channel(i).get_busy() == True and i != 10):
+                pygame.mixer.Channel(i).stop()
+
+        if (pygame.mixer.Channel(10).get_busy() == False):
+            pygame.mixer.Channel(10).play(pygame.mixer.Sound('media/credit_scene.wav'), 1)
+            pygame.mixer.Channel(9).set_volume(0.6)
+
+        if (prog_start == -1):
+            prog_start = pygame.time.get_ticks()
+
+        screen.fill(BLACK)
+        cutscene03()
+
     # ------------ Instruction section ------------ #
     endtime = pygame.time.get_ticks()
 
     if tutoriallevel == 1:
+        for i in range(20):
+            pygame.mixer.Channel(i).stop()
+
         tutorialmove()
         if pressedKey[pygame.K_ESCAPE] and endtime - starttime > 1000:
             starttime = pygame.time.get_ticks()
             tutoriallevel = 0
 
     if tutoriallevel == 2:
+        for i in range(20):
+            pygame.mixer.Channel(i).stop()
+
         tutorialatt()
         if pressedKey[pygame.K_ESCAPE] and endtime - starttime > 1000:
             starttime = pygame.time.get_ticks()
             tutoriallevel = 0
 
     if tutoriallevel == 3:
+        for i in range(20):
+            pygame.mixer.Channel(i).stop()
+
         tutorialspeatt()
         if pressedKey[pygame.K_ESCAPE] and endtime - starttime > 1000:
             starttime = pygame.time.get_ticks()

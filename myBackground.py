@@ -37,6 +37,7 @@ class ground(sprite): # the mid ground for climbing
         self.surface = pygame.Surface(self.dim, pygame.SRCALPHA, 32)
         self.setColor((0, 0, 0))
         self.surface = pygame.image.load('media/grassground.png').convert_alpha()
+        self.imagecounter = -1
         self.surface = pygame.transform.scale(self.surface, (width, min(height, 300)))
         self.images = []
 
@@ -45,6 +46,15 @@ class ground(sprite): # the mid ground for climbing
             self.images.append(image('media/grassground.png', i, self.y, 1200, min(self.height, 500)))
             if (self.x + self.width - i < 1200):
                 self.images.append(image('media/grassground.png', self.x - self.width - 10, self.y, self.x + self.width - i, min(self.height, 500)))'''
+
+    def bonfire_anim(self):
+        self.imagecounter += 1
+
+        if self.imagecounter >= 24:
+            self.imagecounter = 0
+
+        self.surface = pygame.image.load('media/bonfire_0' + str(int(self.imagecounter / 2)) + '.png').convert_alpha()
+        self.surface = pygame.transform.scale(self.surface, (100, 150))
 
 class trigger(sprite): # the mid ground for climbing
     def __init__(self, width, height, x=0, y=0):  # add frames input
@@ -126,8 +136,8 @@ class trap(sprite):
         self.dim = (self.width, self.height)
         self.typ = random.randrange(3)
         self.surface = pygame.Surface(self.dim, pygame.SRCALPHA, 32)
-        self.red = 255
-        self.green = 255
+        self.red = 0
+        self.green = 0
         self.blue = 0
         self.color = (self.red, self.green, self.blue)
         self.surface.fill(self.color)
@@ -150,11 +160,13 @@ class moving_trap(trap):
         trap.__init__(self, width, height, x, y)
         self.move_range = (0, 0)
         self.yspd = 10
+        self.imagecounter = -1
 
     def set_rangey(self, l, r):
         self.move_range = (l, r)
 
     def trap_move(self, player): # try to detect player
+        self.trap_anim()
         self.y += self.yspd * self.dir1
 
         if (self.y < self.move_range[0]):
@@ -163,10 +175,8 @@ class moving_trap(trap):
         if (self.y > self.move_range[1]):
             self.dir1 = -1
 
-        if (self.checkcollision(self, player)):
+        if (self.checkcollision(self, player) and player.y > self.y + 100 and self.x + 50 <= player.x <= self.x + self.width - 50):
             player.hp = 0
-            player.jump = -15
-            player.bounce = True
 
             if (player.x > self.x + self.width/2):
                 player.dir = 1
@@ -174,6 +184,16 @@ class moving_trap(trap):
                 player.dir = -1
 
         self.pos = (self.x , self.y)
+
+    def trap_anim(self):
+        self.imagecounter += 1
+
+        if self.imagecounter >= 30:
+            self.imagecounter = 0
+
+        self.surface = pygame.image.load('media/moving_trap0' + str(int(self.imagecounter / 10)) + '.png').convert_alpha()
+        self.surface = pygame.transform.scale(self.surface, (self.width, 800))
+
 
 class water(sprite):
     def __init__(self, width, height, x=0, y=0):  # add frames input

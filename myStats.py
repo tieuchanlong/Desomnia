@@ -33,12 +33,12 @@ class paint_bar(sprite):
         if (self.amount == 50 and amount > 0):
             self.amount -= amount
 
-        if (self.amount == 0 and amount > 0):
+        if (self.amount <= 0 and amount < 0):
             self.amount -= amount
 
 
     def check_amount(self):
-        if (self.amount == 0):
+        if (self.amount <= 0):
             self.surface = pygame.image.load('media/paintbar_00.png').convert_alpha()
 
         if (self.amount == 10):
